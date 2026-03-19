@@ -153,14 +153,14 @@
 
 <div id="loading">
   <div class="spinner"></div>
-  <p id="load-msg">Connecting to Census Bureauâ€¦</p>
+  <p id="load-msg">Connecting to Census Bureau…</p>
   <small id="load-sub">Loading 13 markets – this takes 20–40 seconds</small>
   <div class="prog-wrap"><div id="load-bar"></div></div>
   <span id="load-pct">0%</span>
 </div>
 
 <div id="error-box">
-  <h2>âš ï¸ Data Load Error</h2>
+  <h2>⚠ï¸ Data Load Error</h2>
   <p id="error-msg">Could not load Census data. Check your internet connection and try refreshing.</p>
   <code id="error-detail"></code>
 </div>
@@ -173,7 +173,7 @@
     <p>Ages 21–35 &nbsp;·&nbsp; Income $75k+ &nbsp;·&nbsp; No-Children HH &nbsp;·&nbsp; ACS 5-Year 2021</p>
   </div>
   <select id="market-select" onchange="flyToMarket(this.value)">
-    <option value="">ðŸ—º All 13 Markets</option>
+    <option value="">🗺 All 13 Markets</option>
   </select>
 </div>
 
@@ -224,7 +224,7 @@
 
 <div id="stats">
   <h3>Market Summary</h3>
-  <div id="stats-content"><div class="s-hint">Loading dataâ€¦</div></div>
+  <div id="stats-content"><div class="s-hint">Loading data…</div></div>
 </div>
 
 <div id="tooltip">
@@ -902,7 +902,7 @@ let marketLabelsGroup, nbhdLabelsGroup, currentMarketId = null;
 function initMap() {
   MAP = L.map('map', { zoomControl: false }).setView([38.5, -96], 4);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors Â© <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19
   }).addTo(MAP);
   L.control.zoom({ position: 'bottomright' }).addTo(MAP);
@@ -1070,11 +1070,11 @@ function renderSummary(features, label) {
   const tarPop = valid.reduce((s,f) => s + (f.properties.pop_22_34  || 0), 0);
   document.getElementById('stats-content').innerHTML = `
     <div class="s-name">${label || 'All 13 Markets'}</div>
-    <div class="s-summary-row"><span>ðŸ”¥ High Opportunity tracts</span><strong>${high.toLocaleString()}</strong></div>
-    <div class="s-summary-row"><span>ðŸ“ˆ Moderate-High tracts</span><strong>${modhi.toLocaleString()}</strong></div>
-    <div class="s-summary-row"><span>ðŸ“ Total tracts analyzed</span><strong>${valid.length.toLocaleString()}</strong></div>
-    <div class="s-summary-row"><span>ðŸ‘¤ Target-age residents</span><strong>${Math.round(tarPop/1000).toLocaleString()}k</strong></div>
-    <div class="s-summary-row"><span>ðŸ™ï¸ Total population</span><strong>${Math.round(totPop/1000).toLocaleString()}k</strong></div>
+    <div class="s-summary-row"><span>🔥 High Opportunity tracts</span><strong>${high.toLocaleString()}</strong></div>
+    <div class="s-summary-row"><span>📈 Moderate-High tracts</span><strong>${modhi.toLocaleString()}</strong></div>
+    <div class="s-summary-row"><span>📍 Total tracts analyzed</span><strong>${valid.length.toLocaleString()}</strong></div>
+    <div class="s-summary-row"><span>👤 Target-age residents</span><strong>${Math.round(tarPop/1000).toLocaleString()}k</strong></div>
+    <div class="s-summary-row"><span>🏙ï¸ Total population</span><strong>${Math.round(totPop/1000).toLocaleString()}k</strong></div>
     <div class="s-hint" style="margin-top:8px">Click any census tract for details</div>`;
 }
 
@@ -1122,7 +1122,7 @@ function switchMetric(btn) {
   populateMarketDropdown();
 
   try {
-    document.getElementById('load-msg').textContent = 'Fetching Census dataâ€¦';
+    document.getElementById('load-msg').textContent = 'Fetching Census data…';
 
     // Census calls: one per state group
     const censusPromises = Object.entries(STATE_GROUPS).map(([state, counties]) =>
@@ -1143,7 +1143,7 @@ function switchMetric(btn) {
       Promise.all(geoPromises),
     ]);
 
-    document.getElementById('load-msg').textContent = 'Computing opportunity indexâ€¦';
+    document.getElementById('load-msg').textContent = 'Computing opportunity index…';
 
     // Merge census lookup
     const lookup = Object.assign({}, ...censusResults);
