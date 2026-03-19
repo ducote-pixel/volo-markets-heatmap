@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Volo Markets â€” Demographic Opportunity Map</title>
+  <title>Volo Markets – Demographic Opportunity Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -55,6 +55,8 @@
       background: #fff; border-radius: 12px; padding: 13px 15px;
       box-shadow: 0 2px 14px rgba(0,0,0,0.11); z-index: 900; min-width: 186px;
     }
+    #legend.minimized .legend-body { display: none; }
+    #legend.minimized { padding-bottom: 10px; }
     #legend h3 { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 9px; }
     #legend-label { font-size: 11px; color: #555; font-weight: 600; margin-bottom: 7px; }
     .grad-bar { height: 11px; border-radius: 4px; background: linear-gradient(to right, #ffffb2, #fecc5c, #fd8d3c, #f03b20, #bd0026); }
@@ -152,7 +154,7 @@
 <div id="loading">
   <div class="spinner"></div>
   <p id="load-msg">Connecting to Census Bureauâ€¦</p>
-  <small id="load-sub">Loading 13 markets â€” this takes 20â€“40 seconds</small>
+  <small id="load-sub">Loading 13 markets – this takes 20â€“40 seconds</small>
   <div class="prog-wrap"><div id="load-bar"></div></div>
   <span id="load-pct">0%</span>
 </div>
@@ -167,8 +169,8 @@
 
 <div id="header">
   <div>
-    <h1>Volo Markets â€” Demographic Opportunity Map</h1>
-    <p>Ages 21â€“35 &nbsp;Â·&nbsp; Income $75k+ &nbsp;Â·&nbsp; No-Children HH &nbsp;Â·&nbsp; ACS 5-Year 2021</p>
+    <h1>Volo Markets – Demographic Opportunity Map</h1>
+    <p>Ages 21â€“35 &nbsp;·&nbsp; Income $75k+ &nbsp;·&nbsp; No-Children HH &nbsp;·&nbsp; ACS 5-Year 2021</p>
   </div>
   <select id="market-select" onchange="flyToMarket(this.value)">
     <option value="">ðŸ—º All 13 Markets</option>
@@ -207,18 +209,20 @@
 </div>
 
 <div id="legend">
-  <h3>Legend</h3>
-  <div id="legend-label">Opportunity Index (0â€“100)</div>
-  <div class="grad-bar"></div>
-  <div class="grad-labels"><span>0 â€” Low</span><span>100 â€” High</span></div>
-  <div class="tier-list">
-    <div class="tier-row"><div class="tier-swatch" style="background:#bd0026"></div>High Opportunity (75â€“100)</div>
-    <div class="tier-row"><div class="tier-swatch" style="background:#f03b20"></div>Moderate-High (50â€“74)</div>
-    <div class="tier-row"><div class="tier-swatch" style="background:#fecc5c"></div>Moderate-Low (25â€“49)</div>
-    <div class="tier-row"><div class="tier-swatch" style="background:#ffffb2"></div>LowOpportunity (0â€“24)</div>
-    <div class="tier-row"><div class="tier-swatch" style="background:#ccc"></div>Insufficient data</div>
+  <h3 style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px 0">Legend <button id="legend-toggle" onclick="var l=document.getElementById('legend');l.classList.toggle('minimized');this.textContent=l.classList.contains('minimized')?'+ Show':'- Hide'" style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:10px;padding:1px 5px;color:#777;margin-left:10px">- Hide</button></h3>
+  <div class="legend-body">
+    <div id="legend-label">Opportunity Index (0–100)</div>
+    <div class="grad-bar"></div>
+    <div class="grad-labels"><span>0 – Low</span><span>100 – High</span></div>
+    <div class="tier-list">
+      <div class="tier-row"><div class="tier-swatch" style="background:#bd0026"></div>High Opportunity (75–100)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#f03b20"></div>Moderate-High (50–74)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#fecc5c"></div>Moderate-Low (25–49)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#ffffb2"></div>Low Opportunity (0–24)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#ccc"></div>Insufficient data</div>
+    </div>
+    <div id="legend-source">Source: U.S. Census Bureau, ACS 5-Year 2021</div>
   </div>
-  <div id="legend-source">Source: U.S. Census Bureau, ACS 5-Year 2021</div>
 </div>
 
 <div id="stats">
@@ -266,6 +270,10 @@ const METRIC_META = {
   pct_75k_plus:      { label: '% Households with Income $75k+',          suffix: '%'   },
   pct_no_children:   { label: '% No-Children Households',             suffix: '%'   },
   count_22_34:       { label: 'Target-Age Residents (relative count)', suffix: ''    },
+  pct_renter:        { label: '% Renter-Occupied Units',                  suffix: '%'   },
+  pct_college:       { label: '% College Graduates',                       suffix: '%'   },
+  pct_solo_hh:       { label: '% Solo (1-Person) Households',               suffix: '%'   },
+  sports_infra_score:{ label: 'Sports Infrastructure Score (0-100)',        suffix: '/100'},
 };
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -678,7 +686,7 @@ function getColor(v) {
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// PERCENTILE RANK â€” binary search O(log n)
+// PERCENTILE RANK – binary search O(log n)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 function percentileRankBinary(sortedArr, val) {
   if (val == null || sortedArr.length === 0) return null;
@@ -975,7 +983,7 @@ function updateLabelVisibility() {
 }
 
 // â”€â”€ Tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function fmt(v, s) { return (v == null || isNaN(v)) ? 'â€”' : v.toFixed(1)+s; }
+function fmt(v, s) { return (v == null || isNaN(v)) ? '–' : v.toFixed(1)+s; }
 
 function renderTooltip(p) {
   const fmt  = v => v == null ? '—' : v.toFixed(1) + '%';
@@ -1019,7 +1027,7 @@ document.addEventListener('mousemove', e => {
 // â”€â”€ Stats panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function barRow(label, val, count, unit) {
   const pctStr = val != null ? val.toFixed(1)+'%' : 'âž€”';
-  const cntStr = count != null ? `<span style="font-size:10px;color:#bbb;font-weight:400"> Â· ${count.toLocaleString()}${unit||''}</span>` : '';
+  const cntStr = count != null ? `<span style="font-size:10px;color:#bbb;font-weight:400"> · ${count.toLocaleString()}${unit||''}</span>` : '';
   return `<div class="s-row">
     <div class="s-row-top"><span class="s-lbl">${label}</span><span class="s-val">${pctStr}${cntStr}</span></div>
     <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(val||0,100)}%;background:#e05c26"></div></div>
