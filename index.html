@@ -1134,7 +1134,7 @@ function renderSummary(features, label) {
   const totPop = valid.reduce((s,f) => s + (f.properties.total_pop  || 0), 0);
   const tarPop = valid.reduce((s,f) => s + (f.properties.pop_22_34  || 0), 0);
   document.getElementById('stats-content').innerHTML = `
-    <div class="s-name">${label || 'All 13 Markets'}</div>
+    <div class="s-name">${label || 'All 15 Markets'}</div>
     <div class="s-summary-row"><span>🔥 High Opportunity tracts</span><strong>${high.toLocaleString()}</strong></div>
     <div class="s-summary-row"><span>📈 Moderate-High tracts</span><strong>${modhi.toLocaleString()}</strong></div>
     <div class="s-summary-row"><span>📍 Total tracts analyzed</span><strong>${valid.length.toLocaleString()}</strong></div>
