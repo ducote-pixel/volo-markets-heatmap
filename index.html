@@ -147,7 +147,14 @@
     #error-box h2 { font-size: 16px; color: #cc3333; margin-bottom: 8px; }
     #error-box p  { font-size: 12px; color: #777; line-height: 1.6; }
     #error-box code { display: block; margin-top: 10px; font-size: 10px; background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: left; word-break: break-all; color: #555; }
-  </style>
+  
+  #venue-panel { padding:8px 12px 10px; border-top:1px solid #eee; margin-top:2px; }
+  #venue-panel .vp-label { font-size:10px; font-weight:700; color:#888; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }
+  .vtoggle { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:12px; color:#333; padding:3px 0; user-select:none; }
+  .vtoggle input[type=checkbox] { margin:0; cursor:pointer; accent-color:#444; }
+  .vdot { width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; border:1.5px solid rgba(0,0,0,.15); }
+  .vtoggle small { color:#999; font-size:10px; }
+</style>
 </head>
 <body>
 
@@ -203,6 +210,13 @@
   <button class="mbtn" data-m="pct_walk_transit" onclick="switchMetric(this)">
     🚶 Walkability<small>% walking/biking/transit commuters</small>
   </button>
+</div>
+
+<div id="venue-panel">
+  <div class="vp-label">Venue Overlay – Charleston</div>
+  <label class="vtoggle"><input type="checkbox" id="tog-field" checked onchange="toggleVenueType('F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Athletic Fields <small>(45)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-school" checked onchange="toggleVenueType('S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(4)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-bar" checked onchange="toggleVenueType('B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(15)</small></label>
 </div>
 
 <div id="legend">
@@ -1184,6 +1198,114 @@ function switchMetric(btn) {
     document.getElementById('error-detail').textContent = err.message || String(err);
   }
 })();
+</script>
+
+<script>
+const CHARLESTON_VENUES=[
+{n:'Ackerman Park',t:'F',a:'55 Sycamore Avenue, Charleston, SC 29424',lat:32.936408,lng:-80.060652},
+{n:'Apex Volleyball',t:'F',a:'7600 Southrail Rd Bldg 100, North Charleston, SC 29420',lat:32.791939,lng:-79.954239},
+{n:'Arthur W Christopher Community Center',t:'F',a:'265 Fishburne St., Charleston, SC 29403',lat:32.726993,lng:-79.935753},
+{n:'Bayview Soccer Complex',t:'F',a:'1045 Fort Johnson Road, Charleston, SC 29412',lat:32.832776,lng:-80.095323},
+{n:'Bees Landing Recreation Center',t:'F',a:'1580 Ashley Gardens Blvd., Charleston, SC 29414',lat:32.792985,lng:-79.902915},
+{n:'Bishop England High School',t:'S',a:'363 Seven Farms Drive, Daniel Island, SC 29492',lat:32.790504,lng:-79.872197},
+{n:'Cheryll Woods - Flowers Soccer Complex',t:'F',a:'85 Patriots Point Rd, Mt Pleasant, SC 29464',lat:32.864563,lng:-79.898956},
+{n:'CrushYard',t:'B',a:'3365 S Morgans Point Rd, Mt Pleasant, SC 29466',lat:32.820557,lng:-79.993179},
+{n:'Daniel Rec Center',t:'F',a:'160 Fairbanks Dr, Charleston, SC 29492',lat:32.907277,lng:-79.976108},
+{n:'Deming Park',t:'F',a:'1030 5th St, Charleston, SC 29406',lat:32.824603,lng:-79.990010},
+{n:'Elks Lodge',t:'F',a:'1113 Sam Rittenberg Blvd, Charleston, SC 29407',lat:32.858034,lng:-79.915486},
+{n:'Etiwan Park',t:'F',a:'144-156 Etiwan Park St, Charleston, SC 29492',lat:32.729202,lng:-79.978892},
+{n:'Ferguson Village Park',t:'F',a:'1935 Ferguson Road, Charleston, SC 29412',lat:32.791374,lng:-79.998661},
+{n:'Forest Park Playground',t:'F',a:'780 West Oak Forest Drive, Charleston, SC 29407',lat:32.848787,lng:-79.911512},
+{n:'Freedom Park',t:'F',a:'985 Barfield Street, Charleston, SC 29492',lat:32.858367,lng:-79.912806},
+{n:'Govenors Park',t:'F',a:'Seven Farms Drive, Charleston, SC 29492',lat:32.791610,lng:-79.953894},
+{n:'Harmon Field',t:'F',a:'201 President Street, Charleston, SC 29403',lat:32.718745,lng:-80.077116},
+{n:'Haut Gap Recreation Complex',t:'F',a:'1861 Bohicket Road, Johns Island, SC 29455',lat:32.774177,lng:-79.927128},
+{n:'Hazel Parker Playground',t:'F',a:'70 East Bay Street, Charleston, SC 29401',lat:32.786859,lng:-79.786068},
+{n:'Isle of Palms County Park Rules',t:'F',a:'1-14th Ave., Isle of Palms, SC 29451',lat:32.738640,lng:-79.937808},
+{n:'James Island Recreation Complex',t:'F',a:'1088 Quail Drive, Charleston, SC 29412',lat:32.722741,lng:-80.084391},
+{n:'Johns Island Park',t:'F',a:'1727 Bozo Ln, Charleston, SC 29455',lat:32.883703,lng:-79.991539},
+{n:'Lents Field',t:'F',a:'1429 Wando Rd, North Charleston, SC 29405',lat:32.799285,lng:-79.939249},
+{n:'Martin Park (next to MLK Pool)',t:'F',a:'155 Jackson Street, Charleston, SC 29403',lat:32.816964,lng:-80.000038},
+{n:'Mary Utsey Playground / Orange Grove Park',t:'F',a:'1350 Orange Grove Road, Charleston, SC 29407',lat:32.800806,lng:-79.953692},
+{n:'McMahon Playground',t:'F',a:'55 Cleveland Street, Charleston, SC 29403',lat:32.903164,lng:-79.987456},
+{n:'Moultrie Middle School',t:'S',a:'645 Coleman Blvd, Mt Pleasant, SC 29464',lat:32.775387,lng:-79.969291},
+{n:'MWV/Kapstone Park - Westvaco',t:'F',a:'1206 Bentley Rd, North Charleston, SC 29406',lat:32.884383,lng:-79.991868},
+{n:'North Charleston Sports Compelx',t:'F',a:'1455 Monitor St, North Charleston, SC 29405',lat:32.894277,lng:-79.773739},
+{n:'Oceanside Academy',t:'F',a:'580 Faison Rd, Mt Pleasant, SC 29466, USA',lat:32.809221,lng:-79.867019},
+{n:'Palmetto Strikers',t:'F',a:'1007 Johnnie Dodds Blvd, Mt Pleasant, SC 29464',lat:32.825372,lng:-79.987554},
+{n:'Parkshore Park',t:'F',a:'1 Windsor Place, Charleston, SC 29407',lat:32.767905,lng:-79.992262},
+{n:'Plymouth Park',t:'F',a:'35 Plymouth Ave., Charleston, SC 29401',lat:32.786008,lng:-80.016637},
+{n:'Porter Gaud',t:'S',a:'26 Jamestown Rd, Charleston, SC 29407',lat:32.848762,lng:-79.909825},
+{n:'Randolph Park',t:'F',a:'1683 Pearlott St, Charleston, SC 29407',lat:32.729060,lng:-80.289745},
+{n:'Schroder Community Center',t:'F',a:'7224 Hwy. 162, Hollywood, SC 29449',lat:32.792445,lng:-79.934714},
+{n:'Shaw Community Center',t:'F',a:'20 Mary Street, Charleston, SC 29403',lat:32.923397,lng:-79.830788},
+{n:'Shipyard Park',t:'F',a:'2383 SC-41, Mt Pleasant, SC 29466, USA',lat:32.845445,lng:-79.876318},
+{n:'Skyzone',t:'F',a:'411 Wando Park Blvd, Mt Pleasant, SC 29464',lat:32.738640,lng:-79.937808},
+{n:'St. James-Santee Recreation Complex',t:'F',a:'1088 Quail Dr, Charleston, SC 29412',lat:32.799269,lng:-79.935272},
+{n:'St. Julian Devine Community Center',t:'F',a:'1 Cooper Street, Charleston, SC 29403',lat:32.725856,lng:-79.943174},
+{n:'Stephen Washington Park',t:'F',a:'1148 Fort Johnson Road, Charleston, SC 29412',lat:32.792005,lng:-79.958789},
+{n:'Stoney Field',t:'F',a:'300 Fishburne St, Charleston, SC 29403',lat:32.812892,lng:-80.030874},
+{n:'The Salvation Army Church of Charleston',t:'F',a:'2135 Ashley River Rd, Charleston, SC 29407',lat:32.713366,lng:-79.958293},
+{n:'Thomas Johnson Playground',t:'F',a:'1443 Secessionville Road, Charleston, SC 29412',lat:32.791374,lng:-79.998661},
+{n:'Thompson Hill Recreation Complex',t:'F',a:'1087 Roosevelt Rd, Awendaw, SC 29429',lat:32.791374,lng:-79.998661},
+{n:'W.L. Stephens Pool',t:'F',a:'780 West Oak Forest Dr, Charleston, SC 29407',lat:32.931837,lng:-80.132391},
+{n:'Wescott Park',t:'F',a:'9006 Dorchester Rd, North Charleston, SC 29420',lat:32.819178,lng:-80.054819},
+{n:'West Ashley Park',t:'F',a:'3601 Mary Ader Avenue, Charleston, SC 29414',lat:32.873352,lng:-79.772160},
+{n:'Daniel Island School',t:'S',a:'2365 Daniel Island Drive Charleston, SC 29492',lat:32.790050,lng:-79.989462},
+{n:'Charleston Sports Pub',t:'B',a:'1124 Sam Rittenberg Blvd, Charleston, SC 29407',lat:32.762109,lng:-79.987566},
+{n:'Charleston Sports Pub',t:'B',a:'1989 Maybank Hwy, Charleston, SC 29412',lat:32.762109,lng:-79.987566},
+{n:'Charleston Sports Pub',t:'B',a:'1909 N Hwy 17, Mt Pleasant, SC 29464',lat:32.762109,lng:-79.987566},
+{n:'The Shelter Kitchen + Bar',t:'B',a:'202 Coleman Blvd, Mt Pleasant, SC 29464',lat:32.792843,lng:-79.855539},
+{n:'My Father\'s Mustache',t:'B',a:'1405 Ben Sawyer Blvd #103, Mt Pleasant, SC 29464',lat:32.824241,lng:-80.037752},
+{n:'The Pub on 61',t:'B',a:'2366 Ashley River Rd, Charleston, SC 29414',lat:32.789307,lng:-79.947226},
+{n:'Fuel Charleston',t:'B',a:'211 Rutledge Ave, Charleston, SC 29403',lat:32.798039,lng:-79.934621},
+{n:'Bar Mash',t:'B',a:'701 Wonders Wy Suite 100-2, Charleston, SC 29403',lat:32.708238,lng:-79.964413},
+{n:'Bohemian Bull',t:'B',a:'1531 Folly Rd, Charleston, SC 29412',lat:32.729065,lng:-80.067090},
+{n:'Tattooed Moose',t:'B',a:'3328 Maybank Hwy, Johns Island, SC 29455',lat:32.793233,lng:-79.868359},
+{n:'Mix',t:'B',a:'730 Coleman Blvd, Mt Pleasant, SC 29464',lat:32.789241,lng:-79.936977},
+{n:'Share House',t:'B',a:'23 Ann St, Charleston, SC 29403',lat:32.792604,lng:-79.941233},
+{n:'Uptown Social',t:'B',a:'587 King St, Charleston, SC 29403',lat:32.805814,lng:-79.760120},
+{n:'Islander 71',t:'B',a:'80 41st Ave, Isle of Palms, SC 29451',lat:32.856098,lng:-79.918571}
+];
+
+const _VENUE_COLORS = {F:'#22c55e',S:'#3b82f6',B:'#f59e0b'};
+const _VENUE_TYPE_LABELS = {F:'Athletic Field',S:'School',B:'Bar'};
+const _venueMarkersByType = {F:[],S:[],B:[]};
+let _venueLayerGroup = null;
+
+function initVenueOverlay() {
+  if(typeof MAP === 'undefined' || !MAP) { setTimeout(initVenueOverlay, 400); return; }
+  _venueLayerGroup = L.layerGroup().addTo(MAP);
+  CHARLESTON_VENUES.forEach(function(v) {
+    if(!v.lat || !v.lng) return;
+    const color = _VENUE_COLORS[v.t] || '#999';
+    const marker = L.circleMarker([v.lat, v.lng], {
+      radius: 7,
+      fillColor: color,
+      color: '#fff',
+      weight: 1.5,
+      opacity: 1,
+      fillOpacity: 0.85,
+      pane: 'markerPane'
+    }).bindPopup(
+      '<strong>' + v.n + '</strong><br>' +
+      '<span style="color:#666;font-size:11px">' + _VENUE_TYPE_LABELS[v.t] + '</span>' +
+      (v.a ? '<br><span style="color:#999;font-size:10px">' + v.a + '</span>' : '')
+    );
+    _venueMarkersByType[v.t].push(marker);
+    _venueLayerGroup.addLayer(marker);
+  });
+}
+
+function toggleVenueType(typeKey, show) {
+  if(!_venueLayerGroup) return;
+  _venueMarkersByType[typeKey].forEach(function(m) {
+    if(show) _venueLayerGroup.addLayer(m);
+    else _venueLayerGroup.removeLayer(m);
+  });
+}
+
+initVenueOverlay();
 </script>
 </body>
 </html>
