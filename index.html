@@ -1400,6 +1400,11 @@ const _venueLayers = {};
 
 function initVenueOverlay() {
   if(typeof MAP === 'undefined' || !MAP) { setTimeout(initVenueOverlay, 400); return; }
+  if(!MAP.getPane('venuePane')) {
+    MAP.createPane('venuePane');
+    MAP.getPane('venuePane').style.zIndex = 650;
+    MAP.getPane('venuePane').style.pointerEvents = 'auto';
+  }
   var cityVenues = [
     {city:'charleston', data:CHARLESTON_VENUES},
     {city:'phoenix',    data:PHX_VENUES},
@@ -1417,8 +1422,9 @@ function initVenueOverlay() {
       if(!v.lat || !v.lng) return;
       var key = cv.city+'_'+v.t;
       var m = L.circleMarker([v.lat,v.lng],{
-        radius:7, color:'#fff', weight:1.5,
-        fillColor:colors[v.t], fillOpacity:0.85
+        radius:9, color:'#1e293b', weight:2,
+        fillColor:colors[v.t], fillOpacity:1,
+        pane:'venuePane'
       })
       .bindTooltip(v.n, {permanent:false, direction:'top', className:'venue-tip'})
       .bindPopup('<b>'+v.n+'</b><br>'+labels[v.t]);
