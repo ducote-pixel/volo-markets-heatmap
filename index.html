@@ -33,7 +33,10 @@
       position: fixed; top: 88px; left: 16px;
       background: #fff; border-radius: 12px; padding: 14px 14px 10px;
       box-shadow: 0 2px 14px rgba(0,0,0,0.11); z-index: 900; min-width: 186px;
+      max-height: calc(100vh - 132px); overflow-y: auto;
     }
+    #controls::-webkit-scrollbar { width: 4px; }
+    #controls::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
     #controls h3 {
       font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
       color: #aaa; margin-bottom: 9px;
@@ -210,13 +213,12 @@
   <button class="mbtn" data-m="pct_walk_transit" onclick="switchMetric(this)">
     🚶 Walkability<small>% walking/biking/transit commuters</small>
   </button>
-</div>
-
-<div id="venue-panel">
+  <div id="venue-panel">
   <div class="vp-label">Venue Overlay – Charleston</div>
   <label class="vtoggle"><input type="checkbox" id="tog-field" checked onchange="toggleVenueType('F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Athletic Fields <small>(45)</small></label>
   <label class="vtoggle"><input type="checkbox" id="tog-school" checked onchange="toggleVenueType('S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(4)</small></label>
   <label class="vtoggle"><input type="checkbox" id="tog-bar" checked onchange="toggleVenueType('B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(15)</small></label>
+</div>
 </div>
 
 <div id="legend">
