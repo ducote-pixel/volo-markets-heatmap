@@ -1,1 +1,1439 @@
-test
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volo Markets â Demographic Opportunity Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #e8e8e8; overflow: hidden; }
+    #map { position: absolute; inset: 0; z-index: 1; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Header Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #header {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      background: #fff; border-radius: 12px; padding: 10px 20px;
+      box-shadow: 0 2px 18px rgba(0,0,0,0.14); z-index: 900;
+      text-align: center; border-top: 4px solid #e05c26;
+      display: flex; align-items: center; gap: 16px; white-space: nowrap;
+    }
+    #header h1 { font-size: 13px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.2px; }
+    #header p  { font-size: 10px; color: #888; margin-top: 2px; }
+    #market-select {
+      font-size: 12px; padding: 5px 10px; border: 1px solid #e0e0e0;
+      border-radius: 7px; background: #fafafa; color: #333; cursor: pointer;
+      outline: none; min-width: 160px;
+    }
+    #market-select:hover { border-color: #e05c26; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Left Panel: Metric Switcher Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #controls {
+      position: fixed; top: 88px; left: 16px;
+      background: #fff; border-radius: 12px; padding: 14px 14px 10px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.11); z-index: 900; min-width: 186px;
+      max-height: calc(100vh - 310px); overflow-y: auto;
+    }
+    #controls::-webkit-scrollbar { width: 6px; }
+    #controls::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+    #controls::-webkit-scrollbar-track { background: transparent; }
+    #controls h3 {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+      color: #aaa; margin-bottom: 9px;
+    }
+    .mbtn {
+      display: block; width: 100%; text-align: left;
+      padding: 8px 10px; border: 1px solid #e8e8e8; border-radius: 7px;
+      margin-bottom: 5px; cursor: pointer; font-size: 12px;
+      background: #fff; color: #444; transition: all 0.12s; line-height: 1.3;
+    }
+    .mbtn:hover  { border-color: #e05c26; color: #e05c26; }
+    .mbtn.active { background: #e05c26; color: #fff; border-color: #e05c26; font-weight: 600; }
+    .mbtn small  { display: block; font-size: 10px; font-weight: 400; opacity: 0.75; margin-top: 1px; }
+    .mbtn.active small { opacity: 0.85; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Legend Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #legend {
+      position: fixed; bottom: 44px; left: 16px;
+      background: #fff; border-radius: 12px; padding: 13px 15px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.11); z-index: 900; min-width: 186px;
+    }
+    #legend.minimized .legend-body { display: none; }
+    #legend.minimized { padding-bottom: 10px; }
+    #legend h3 { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 9px; }
+    #legend-label { font-size: 11px; color: #555; font-weight: 600; margin-bottom: 7px; }
+    .grad-bar { height: 11px; border-radius: 4px; background: linear-gradient(to right, #ffffb2, #fecc5c, #fd8d3c, #f03b20, #bd0026); }
+    .grad-labels { display: flex; justify-content: space-between; font-size: 9px; color: #aaa; margin-top: 4px; }
+    .tier-list { margin-top: 11px; }
+    .tier-row { display: flex; align-items: center; margin-bottom: 5px; font-size: 11px; color: #555; }
+    .tier-swatch { width: 11px; height: 11px; border-radius: 2px; margin-right: 7px; flex-shrink: 0; }
+    #legend-source { font-size: 9px; color: #bbb; margin-top: 10px; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Stats Panel Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #stats {
+      position: fixed; top: 88px; right: 16px;
+      background: #fff; border-radius: 12px; padding: 14px 15px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.11); z-index: 900; width: 210px;
+    }
+    #stats h3 { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 11px; }
+    .s-name  { font-size: 12px; font-weight: 600; color: #222; margin-bottom: 9px; line-height: 1.35; }
+    .s-idx   { font-size: 28px; font-weight: 800; color: #1a1a1a; line-height: 1; }
+    .s-idx span { font-size: 12px; font-weight: 400; color: #aaa; }
+    .s-tier  { font-size: 10px; color: #777; margin: 3px 0 11px; }
+    .s-row   { margin-bottom: 8px; }
+    .s-row-top { display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .s-lbl   { font-size: 10px; color: #999; }
+    .s-val   { font-size: 11px; font-weight: 700; color: #333; }
+    .bar-bg  { height: 4px; background: #f0f0f0; border-radius: 2px; }
+    .bar-fill { height: 4px; border-radius: 2px; transition: width 0.3s; }
+    .s-hint  { font-size: 10px; color: #bbb; margin-top: 4px; line-height: 1.4; }
+    .s-summary-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; color: #555; }
+    .s-summary-row strong { color: #1a1a1a; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Tooltip Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #tooltip {
+      position: fixed; background: #fff; border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.16); z-index: 1500;
+      min-width: 185px; pointer-events: none; display: none; overflow: hidden;
+    }
+    .tt-color-bar { height: 5px; }
+    .tt-body  { padding: 11px 13px; }
+    .tt-name  { font-size: 10px; font-weight: 600; color: #666; margin-bottom: 6px; }
+    .tt-score { font-size: 25px; font-weight: 800; color: #1a1a1a; line-height: 1; }
+    .tt-score span { font-size: 11px; font-weight: 400; color: #bbb; }
+    .tt-tier  { font-size: 10px; color: #888; margin: 2px 0 9px; }
+    .tt-row   { display: flex; justify-content: space-between; padding: 2px 0; border-top: 1px solid #f5f5f5; }
+    .tt-lbl   { font-size: 10px; color: #aaa; }
+    .tt-val   { font-size: 11px; font-weight: 600; color: #333; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Loading Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #loading {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.96);
+      z-index: 2000; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .spinner {
+      width: 38px; height: 38px; border: 3px solid #f0f0f0; border-top-color: #e05c26;
+      border-radius: 50%; animation: spin 0.75s linear infinite; margin-bottom: 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #load-msg  { font-size: 14px; color: #555; margin-bottom: 4px; }
+    #load-sub  { font-size: 11px; color: #bbb; margin-bottom: 12px; }
+    .prog-wrap { width: 280px; height: 6px; background: #f0f0f0; border-radius: 3px; margin-bottom: 6px; }
+    #load-bar  { height: 6px; background: #e05c26; border-radius: 3px; width: 0; transition: width 0.25s; }
+    #load-pct  { font-size: 11px; color: #bbb; }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Labels Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    .nbhd-label { background: transparent !important; border: none !important; box-shadow: none !important; }
+    .nbhd-text {
+      display: block; transform: translate(-50%, -50%);
+      font-size: 9.5px; font-weight: 700; color: #1a1a1a;
+      text-shadow: 0 0 4px #fff, 0 0 4px #fff, 0 0 5px rgba(255,255,255,0.9);
+      white-space: nowrap; pointer-events: none;
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .market-label { background: transparent !important; border: none !important; box-shadow: none !important; }
+    .market-text {
+      display: block; transform: translate(-50%, -50%);
+      font-size: 11px; font-weight: 800; color: #1a1a1a;
+      background: rgba(255,255,255,0.88); padding: 2px 8px; border-radius: 10px;
+      border: 1.5px solid #e05c26; white-space: nowrap; pointer-events: none;
+    }
+
+    /* Ã¢ââ¬Ã¢ââ¬ Error Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬ */
+    #error-box {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: #fff; border-radius: 12px; padding: 28px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.14); z-index: 2100;
+      text-align: center; max-width: 420px; display: none;
+    }
+    #error-box h2 { font-size: 16px; color: #cc3333; margin-bottom: 8px; }
+    #error-box p  { font-size: 12px; color: #777; line-height: 1.6; }
+    #error-box code { display: block; margin-top: 10px; font-size: 10px; background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: left; word-break: break-all; color: #555; }
+  
+  #venue-panel { padding:8px 12px 10px; border-top:1px solid #eee; margin-top:2px; }
+  #venue-panel .vp-label { font-size:10px; font-weight:700; color:#888; letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }
+  .vtoggle { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:12px; color:#333; padding:3px 0; user-select:none; }
+  .vtoggle input[type=checkbox] { margin:0; cursor:pointer; accent-color:#444; }
+  .vdot { width:10px; height:10px; border-radius:50%; display:inline-block; flex-shrink:0; border:1.5px solid rgba(0,0,0,.15); }
+  .vtoggle small { color:#999; font-size:10px; }
+
+.vcity { font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin:6px 0 3px; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p id="load-msg">Connecting to Census Bureauâ¦</p>
+  <small id="load-sub">Loading 13 markets â this takes 20â40 seconds</small>
+  <div class="prog-wrap"><div id="load-bar"></div></div>
+  <span id="load-pct">0%</span>
+</div>
+
+<div id="error-box">
+  <h2>â Ã¯Â¸Â Data Load Error</h2>
+  <p id="error-msg">Could not load Census data. Check your internet connection and try refreshing.</p>
+  <code id="error-detail"></code>
+</div>
+
+<div id="map"></div>
+
+<div id="header">
+  <div>
+    <h1>Volo Markets â Demographic Opportunity Map</h1>
+    <p>Ages 21â35 &nbsp;Â·&nbsp; Income $75k+ &nbsp;Â·&nbsp; No-Children HH &nbsp;Â·&nbsp; ACS 5-Year 2021</p>
+  </div>
+  <select id="market-select" onchange="flyToMarket(this.value)">
+    <option value="">ðº All 13 Markets</option>
+  </select>
+</div>
+
+<div id="controls">
+  <h3>View Metric</h3>
+    <button class="mbtn active" data-m="opportunity_index" onclick="switchMetric(this)">
+    ð¯ Composite Index<small>All 6 signals combined</small>
+  </button>
+  <button class="mbtn" data-m="pct_22_34" onclick="switchMetric(this)">
+    ð¤ Ages 22â34<small>% of total population</small>
+  </button>
+  <button class="mbtn" data-m="pct_75k_plus" onclick="switchMetric(this)">
+    ð° Income $75k+<small>% of households</small>
+  </button>
+  <button class="mbtn" data-m="pct_no_children" onclick="switchMetric(this)">
+    ð  No-Children HH<small>% of households</small>
+  </button>
+  <button class="mbtn" data-m="pct_renter" onclick="switchMetric(this)">
+    ð¢ Renter Rate<small>% renter-occupied units</small>
+  </button>
+  <button class="mbtn" data-m="pct_college" onclick="switchMetric(this)">
+    ð College Grad<small>% with bachelor's or higher</small>
+  </button>
+  <button class="mbtn" data-m="pct_solo_hh" onclick="switchMetric(this)">
+    ð§ Solo Households<small>% single-person HH</small>
+  </button>
+  <button class="mbtn" data-m="pct_walk_transit" onclick="switchMetric(this)">
+    ð¶ Walkability<small>% walking/biking/transit commuters</small>
+  </button>
+  <div id="venue-panel">
+  <div class="vp-label">Venue Overlays</div>
+  <div class="vcity">Charleston</div>
+  <label class="vtoggle"><input type="checkbox" id="tog-chs-F" checked onchange="toggleVenueType('charleston','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(45)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-chs-S" checked onchange="toggleVenueType('charleston','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(4)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-chs-B" checked onchange="toggleVenueType('charleston','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(15)</small></label>
+  <div class="vcity">Phoenix</div>
+  <label class="vtoggle"><input type="checkbox" id="tog-phx-F" checked onchange="toggleVenueType('phoenix','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(25)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-phx-S" checked onchange="toggleVenueType('phoenix','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(4)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-phx-B" checked onchange="toggleVenueType('phoenix','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(3)</small></label>
+  <div class="vcity">Jacksonville</div>
+  <label class="vtoggle"><input type="checkbox" id="tog-jax-F" checked onchange="toggleVenueType('jacksonville','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(20)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-jax-S" checked onchange="toggleVenueType('jacksonville','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(7)</small></label>
+  <label class="vtoggle"><input type="checkbox" id="tog-jax-B" checked onchange="toggleVenueType('jacksonville','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(11)</small></label>
+</div>
+
+</div>
+
+<div id="legend">
+  <h3 style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px 0">Legend <button id="legend-toggle" onclick="var l=document.getElementById('legend');l.classList.toggle('minimized');this.textContent=l.classList.contains('minimized')?'+ Show':'- Hide'" style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:10px;padding:1px 5px;color:#777;margin-left:10px">- Hide</button></h3>
+  <div class="legend-body">
+    <div id="legend-label">Opportunity Index (0â100)</div>
+    <div class="grad-bar"></div>
+    <div class="grad-labels"><span>0 â Low</span><span>100 â High</span></div>
+    <div class="tier-list">
+      <div class="tier-row"><div class="tier-swatch" style="background:#bd0026"></div>High Opportunity (75â100)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#f03b20"></div>Moderate-High (50â74)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#fecc5c"></div>Moderate-Low (25â49)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#ffffb2"></div>Low Opportunity (0â24)</div>
+      <div class="tier-row"><div class="tier-swatch" style="background:#ccc"></div>Insufficient data</div>
+    </div>
+    <div id="legend-source">Source: U.S. Census Bureau, ACS 5-Year 2021</div>
+  </div>
+</div>
+
+<div id="stats">
+  <h3>Market Summary</h3>
+  <div id="stats-content"><div class="s-hint">Loading dataâ¦</div></div>
+</div>
+
+<div id="tooltip">
+  <div class="tt-color-bar" id="tt-bar"></div>
+  <div class="tt-body">
+    <div class="tt-name" id="tt-name"></div>
+    <div class="tt-score" id="tt-score"><span>/100</span></div>
+    <div class="tt-tier"  id="tt-tier"></div>
+    <div class="tt-row"><span class="tt-lbl">Ages 22â34</span><span class="tt-val" id="tt-age"></span></div>
+    <div class="tt-row"><span class="tt-lbl">Income $75k+</span><span class="tt-val" id="tt-inc"></span></div>
+    <div class="tt-row"><span class="tt-lbl">No-Children HH</span><span class="tt-val" id="tt-kid"></span></div>
+    <div class="tt-row"><span class="tt-lbl">Renter Rate</span><span class="tt-val" id="tt-rent"></span></div>
+    <div class="tt-row"><span class="tt-lbl">College Grad</span><span class="tt-val" id="tt-coll"></span></div>
+    <div class="tt-row"><span class="tt-lbl">Solo HH</span><span class="tt-val" id="tt-solo"></span></div>
+    <div class="tt-row"><span class="tt-lbl">Sports Infra</span><span class="tt-val" id="tt-osm"></span></div>
+    <div class="tt-row"><span class="tt-lbl">Market</span><span class="tt-val" id="tt-market"></span></div>
+  </div>
+</div>
+
+<script>
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// CONSTANTS
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+const RAMP = ['#ffffb2','#fecc5c','#fd8d3c','#f03b20','#bd0026'];
+
+const DEMO_VARS = [
+  'NAME','B01001_001E',
+  'B01001_010E','B01001_011E','B01001_012E',
+  'B01001_034E','B01001_035E','B01001_036E',
+  'B19001_001E','B19001_013E','B19001_014E','B19001_015E','B19001_016E','B19001_017E',
+  'B11005_001E','B11005_002E',
+  'B25003_001E','B25003_003E',
+  'B15003_001E','B15003_022E','B15003_023E','B15003_024E','B15003_025E',
+  'B11001_001E','B11001_008E',
+  'B08301_001E','B08301_018E','B08301_019E','B08301_021E',
+].join(',');
+
+const METRIC_META = {
+  opportunity_index: { label: 'Opportunity Index (0â100)',            suffix: '/100' },
+  pct_22_34:         { label: '% Population Ages 21â35',              suffix: '%'   },
+  pct_75k_plus:      { label: '% Households with Income $75k+',          suffix: '%'   },
+  pct_no_children:   { label: '% No-Children Households',             suffix: '%'   },
+  pct_renter:        { label: '% Renter-Occupied Units',                  suffix: '%'   },
+  pct_college:       { label: '% College Graduates',                       suffix: '%'   },
+  pct_solo_hh:       { label: '% Solo (1-Person) Households',               suffix: '%'   },
+  pct_walk_transit:  { label: '% Active Commuters (Walk/Bike/Transit)', suffix: '%'  },
+};
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// MARKETS CONFIG
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+const MARKETS = [
+  {
+    id: 'baltimore', name: 'Baltimore',
+    center: [39.29, -76.62], zoom: 12,
+    stcofips: ['24510','24005'],
+    neighborhoods: [
+      { name: 'Fells Point',    lat: 39.2836, lng: -76.5940 },
+      { name: 'Canton',         lat: 39.2842, lng: -76.5710 },
+      { name: 'Federal Hill',   lat: 39.2785, lng: -76.6104 },
+      { name: 'Inner Harbor',   lat: 39.2863, lng: -76.6122 },
+      { name: 'Harbor East',    lat: 39.2879, lng: -76.5986 },
+      { name: 'Charles Village', lat: 39.3279, lng: -76.6183 },
+      { name: 'Hampden',        lat: 39.3367, lng: -76.6371 },
+      { name: 'Roland Park',    lat: 39.3522, lng: -76.6378 },
+      { name: 'Remington',      lat: 39.3205, lng: -76.6307 },
+      { name: 'Mt. Vernon',     lat: 39.2988, lng: -76.6155 },
+      { name: 'Station North',  lat: 39.3099, lng: -76.6149 },
+      { name: 'Locust Point',   lat: 39.2647, lng: -76.6043 },
+      { name: 'Pigtown',        lat: 39.2793, lng: -76.6398 },
+      { name: 'Towson',         lat: 39.3955, lng: -76.6019 },
+      { name: 'Catonsville',    lat: 39.2723, lng: -76.7320 },
+      { name: 'Pikesville',     lat: 39.3773, lng: -76.7148 },
+      { name: 'Dundalk',        lat: 39.2534, lng: -76.5255 },
+    ]
+  },
+  {
+    id: 'boston', name: 'Boston',
+    center: [42.36, -71.08], zoom: 12,
+    stcofips: ['25025','25017'],
+    neighborhoods: [
+      { name: 'Back Bay',       lat: 42.3503, lng: -71.0810 },
+      { name: 'Beacon Hill',    lat: 42.3588, lng: -71.0641 },
+      { name: 'South End',      lat: 42.3414, lng: -71.0761 },
+      { name: 'North End',      lat: 42.3647, lng: -71.0542 },
+      { name: 'East Boston',    lat: 42.3795, lng: -71.0264 },
+      { name: 'South Boston',   lat: 42.3339, lng: -71.0475 },
+      { name: 'Dorchester',     lat: 42.3068, lng: -71.0658 },
+      { name: 'Roxbury',        lat: 42.3245, lng: -71.0954 },
+      { name: 'Jamaica Plain',  lat: 42.3115, lng: -71.1139 },
+      { name: 'Fenway',         lat: 42.3439, lng: -71.0998 },
+      { name: 'Allston',        lat: 42.3534, lng: -71.1314 },
+      { name: 'Brighton',       lat: 42.3462, lng: -71.1563 },
+      { name: 'Charlestown',    lat: 42.3783, lng: -71.0605 },
+      { name: 'Harvard Square', lat: 42.3736, lng: -71.1190 },
+      { name: 'Central Square', lat: 42.3653, lng: -71.1031 },
+      { name: 'Kendall Square', lat: 42.3626, lng: -71.0862 },
+      { name: 'Davis Square',   lat: 42.3963, lng: -71.1228 },
+      { name: 'Somerville',     lat: 42.3876, lng: -71.0995 },
+      { name: 'Brookline',      lat: 42.3318, lng: -71.1213 },
+      { name: 'Quincy',         lat: 42.2529, lng: -71.0023 },
+      { name: 'Cambridge',      lat: 42.3736, lng: -71.1097 },
+      { name: 'Medford',        lat: 42.4184, lng: -71.1062 },
+      { name: 'Malden',         lat: 42.4251, lng: -71.0662 },
+    ]
+  },
+  {
+    id: 'charleston', name: 'Charleston',
+    center: [32.79, -79.94], zoom: 12,
+    stcofips: ['45019','45015'],
+    neighborhoods: [
+      { name: 'Downtown',        lat: 32.7765, lng: -79.9311 },
+      { name: 'French Quarter',  lat: 32.7779, lng: -79.9278 },
+      { name: 'Wagener Terrace', lat: 32.7950, lng: -79.9617 },
+      { name: 'North Charleston',lat: 32.8546, lng: -79.9748 },
+      { name: 'West Ashley',     lat: 32.7688, lng: -80.0274 },
+      { name: 'James Island',    lat: 32.7354, lng: -79.9887 },
+      { name: 'Mount Pleasant',  lat: 32.8323, lng: -79.8290 },
+      { name: 'Summerville',     lat: 33.0185, lng: -80.1756 },
+      { name: 'Goose Creek',     lat: 32.9807, lng: -80.0323 },
+    ]
+  },
+  {
+    id: 'denver', name: 'Denver',
+    center: [39.74, -104.98], zoom: 11,
+    stcofips: ['08031','08059','08005','08001'],
+    neighborhoods: [
+      { name: 'LoDo',          lat: 39.7528, lng: -104.9997 },
+      { name: 'Capitol Hill',  lat: 39.7359, lng: -104.9778 },
+      { name: 'Highland',      lat: 39.7648, lng: -105.0103 },
+      { name: 'RiNo',          lat: 39.7627, lng: -104.9788 },
+      { name: 'Five Points',   lat: 39.7578, lng: -104.9779 },
+      { name: 'Cheesman Park', lat: 39.7323, lng: -104.9619 },
+      { name: 'Congress Park', lat: 39.7264, lng: -104.9476 },
+      { name: 'Cherry Creek',  lat: 39.7168, lng: -104.9517 },
+      { name: 'Wash Park',     lat: 39.7023, lng: -104.9655 },
+      { name: 'Baker',         lat: 39.7177, lng: -104.9843 },
+      { name: 'Platt Park',    lat: 39.6926, lng: -104.9765 },
+      { name: 'Englewood',     lat: 39.6481, lng: -104.9878 },
+      { name: 'Lakewood',      lat: 39.7047, lng: -105.0814 },
+      { name: 'Aurora',        lat: 39.7294, lng: -104.8319 },
+      { name: 'Centennial',    lat: 39.5797, lng: -104.8769 },
+      { name: 'Thornton',      lat: 39.8680, lng: -104.9719 },
+      { name: 'Westminster',   lat: 39.8367, lng: -105.0372 },
+      { name: 'Arvada',        lat: 39.8028, lng: -105.0875 },
+      { name: 'Wheat Ridge',   lat: 39.7664, lng: -105.0772 },
+      { name: 'Littleton',     lat: 39.6133, lng: -105.0166 },
+    ]
+  },
+  {
+    id: 'los-angeles', name: 'Los Angeles',
+    center: [34.02, -118.32], zoom: 11,
+    stcofips: ['06037'],
+    neighborhoods: [
+      { name: 'Downtown LA',    lat: 34.0407, lng: -118.2468 },
+      { name: 'Silver Lake',    lat: 34.0865, lng: -118.2707 },
+      { name: 'Echo Park',      lat: 34.0781, lng: -118.2604 },
+      { name: 'Los Feliz',      lat: 34.1068, lng: -118.2975 },
+      { name: 'Hollywood',      lat: 34.0928, lng: -118.3287 },
+      { name: 'West Hollywood', lat: 34.0900, lng: -118.3617 },
+      { name: 'Koreatown',      lat: 34.0594, lng: -118.3001 },
+      { name: 'Mid-City',       lat: 34.0333, lng: -118.3547 },
+      { name: 'Culver City',    lat: 34.0211, lng: -118.3965 },
+      { name: 'Venice',         lat: 33.9850, lng: -118.4695 },
+      { name: 'Santa Monica',   lat: 34.0195, lng: -118.4912 },
+      { name: 'Westwood',       lat: 34.0634, lng: -118.4452 },
+      { name: 'Beverly Hills',  lat: 34.0736, lng: -118.4004 },
+      { name: 'Palms',          lat: 34.0022, lng: -118.4147 },
+      { name: 'Inglewood',      lat: 33.9617, lng: -118.3531 },
+      { name: 'Long Beach',     lat: 33.7701, lng: -118.1937 },
+      { name: 'Compton',        lat: 33.8958, lng: -118.2201 },
+      { name: 'Boyle Heights',  lat: 34.0330, lng: -118.2090 },
+      { name: 'Eagle Rock',     lat: 34.1396, lng: -118.2067 },
+      { name: 'Pasadena',       lat: 34.1478, lng: -118.1445 },
+      { name: 'Glendale',       lat: 34.1425, lng: -118.2551 },
+      { name: 'Burbank',        lat: 34.1808, lng: -118.3090 },
+      { name: 'North Hollywood',lat: 34.1870, lng: -118.3801 },
+      { name: 'Van Nuys',       lat: 34.1958, lng: -118.4492 },
+      { name: 'Sherman Oaks',   lat: 34.1508, lng: -118.4498 },
+      { name: 'Torrance',       lat: 33.8358, lng: -118.3406 },
+      { name: 'Hawthorne',      lat: 33.9164, lng: -118.3526 },
+      { name: 'Watts',          lat: 33.9425, lng: -118.2469 },
+      { name: 'Encino',         lat: 34.1572, lng: -118.5012 },
+    ]
+  },
+  {
+    id: 'miami', name: 'Miami',
+    center: [25.78, -80.22], zoom: 11,
+    stcofips: ['12086'],
+    neighborhoods: [
+      { name: 'Brickell',        lat: 25.7617, lng: -80.1918 },
+      { name: 'Downtown',        lat: 25.7751, lng: -80.1956 },
+      { name: 'Edgewater',       lat: 25.7929, lng: -80.1906 },
+      { name: 'Wynwood',         lat: 25.8015, lng: -80.1994 },
+      { name: 'Design District', lat: 25.8130, lng: -80.1946 },
+      { name: 'Little Havana',   lat: 25.7664, lng: -80.2289 },
+      { name: 'Little Haiti',    lat: 25.8177, lng: -80.1971 },
+      { name: 'Coral Gables',    lat: 25.7215, lng: -80.2684 },
+      { name: 'Coconut Grove',   lat: 25.7270, lng: -80.2408 },
+      { name: 'South Beach',     lat: 25.7907, lng: -80.1300 },
+      { name: 'Mid Beach',       lat: 25.8148, lng: -80.1274 },
+      { name: 'North Beach',     lat: 25.8552, lng: -80.1210 },
+      { name: 'Hialeah',         lat: 25.8576, lng: -80.2781 },
+      { name: 'Doral',           lat: 25.8197, lng: -80.3539 },
+      { name: 'Kendall',         lat: 25.6753, lng: -80.3565 },
+      { name: 'Homestead',       lat: 25.4687, lng: -80.4776 },
+    ]
+  },
+  {
+    id: 'morristown', name: 'Morristown NJ',
+    center: [40.82, -74.47], zoom: 12,
+    stcofips: ['34027'],
+    neighborhoods: [
+      { name: 'Morristown',    lat: 40.7968, lng: -74.4815 },
+      { name: 'Morris Plains', lat: 40.8284, lng: -74.4762 },
+      { name: 'Florham Park',  lat: 40.7957, lng: -74.3940 },
+      { name: 'Madison',       lat: 40.7587, lng: -74.4162 },
+      { name: 'Chatham',       lat: 40.7415, lng: -74.3837 },
+      { name: 'Parsippany',    lat: 40.8579, lng: -74.4249 },
+      { name: 'Randolph',      lat: 40.8404, lng: -74.5757 },
+      { name: 'Boonton',       lat: 40.9023, lng: -74.4057 },
+      { name: 'Denville',      lat: 40.8826, lng: -74.4807 },
+      { name: 'Rockaway',      lat: 40.9018, lng: -74.5196 },
+    ]
+  },
+  {
+    id: 'new-york', name: 'New York City',
+    center: [40.72, -73.99], zoom: 11,
+    stcofips: ['36061','36047','36081','36005','36085','34017'],
+    neighborhoods: [
+      { name: 'Financial District',  lat: 40.7075, lng: -74.0113 },
+      { name: 'Tribeca',             lat: 40.7163, lng: -74.0086 },
+      { name: 'SoHo',                lat: 40.7230, lng: -74.0018 },
+      { name: 'Greenwich Village',   lat: 40.7336, lng: -74.0027 },
+      { name: 'East Village',        lat: 40.7265, lng: -73.9815 },
+      { name: 'Lower East Side',     lat: 40.7153, lng: -73.9836 },
+      { name: 'Chinatown',           lat: 40.7158, lng: -73.9970 },
+      { name: 'Midtown',             lat: 40.7549, lng: -73.9840 },
+      { name: "Hell's Kitchen",      lat: 40.7638, lng: -73.9948 },
+      { name: 'Upper East Side',     lat: 40.7736, lng: -73.9566 },
+      { name: 'Upper West Side',     lat: 40.7870, lng: -73.9754 },
+      { name: 'Harlem',              lat: 40.8116, lng: -73.9465 },
+      { name: 'Washington Heights',  lat: 40.8448, lng: -73.9393 },
+      { name: 'Williamsburg',        lat: 40.7081, lng: -73.9571 },
+      { name: 'DUMBO',               lat: 40.7033, lng: -73.9888 },
+      { name: 'Greenpoint',          lat: 40.7242, lng: -73.9499 },
+      { name: 'Bushwick',            lat: 40.6942, lng: -73.9101 },
+      { name: 'Park Slope',          lat: 40.6710, lng: -73.9795 },
+      { name: 'Crown Heights',       lat: 40.6697, lng: -73.9442 },
+      { name: 'Carroll Gardens',     lat: 40.6800, lng: -73.9998 },
+      { name: 'Bay Ridge',           lat: 40.6358, lng: -74.0187 },
+      { name: 'Bed-Stuy',            lat: 40.6872, lng: -73.9418 },
+      { name: 'Long Island City',    lat: 40.7447, lng: -73.9481 },
+      { name: 'Astoria',             lat: 40.7721, lng: -73.9302 },
+      { name: 'Jackson Heights',     lat: 40.7557, lng: -73.8831 },
+      { name: 'Flushing',            lat: 40.7675, lng: -73.8330 },
+      { name: 'Mott Haven',          lat: 40.8097, lng: -73.9258 },
+      { name: 'Fordham',             lat: 40.8591, lng: -73.9008 },
+      { name: 'St. George',          lat: 40.6437, lng: -74.0735 },
+      { name: 'Jersey City',         lat: 40.7178, lng: -74.0431 },
+      { name: 'Hoboken',             lat: 40.7440, lng: -74.0324 },
+    ]
+  },
+  {
+    id: 'philadelphia', name: 'Philadelphia',
+    center: [40.00, -75.16], zoom: 12,
+    stcofips: ['42101'],
+    neighborhoods: [
+      { name: 'Center City',         lat: 39.9526, lng: -75.1652 },
+      { name: 'Old City',            lat: 39.9514, lng: -75.1447 },
+      { name: 'Fishtown',            lat: 39.9735, lng: -75.1367 },
+      { name: 'Northern Liberties',  lat: 39.9652, lng: -75.1428 },
+      { name: 'Kensington',          lat: 39.9887, lng: -75.1245 },
+      { name: 'Brewerytown',         lat: 39.9745, lng: -75.1824 },
+      { name: 'Fairmount',           lat: 39.9643, lng: -75.1761 },
+      { name: 'South Philly',        lat: 39.9195, lng: -75.1662 },
+      { name: 'West Philly',         lat: 39.9525, lng: -75.2218 },
+      { name: 'Manayunk',            lat: 40.0281, lng: -75.2258 },
+      { name: 'Germantown',          lat: 40.0362, lng: -75.1727 },
+      { name: 'Chestnut Hill',       lat: 40.0726, lng: -75.2088 },
+      { name: 'Mt Airy',             lat: 40.0550, lng: -75.1888 },
+      { name: 'NE Philly',           lat: 40.0793, lng: -75.0336 },
+      { name: 'South Street',        lat: 39.9432, lng: -75.1599 },
+    ]
+  },
+  {
+    id: 'san-diego', name: 'San Diego',
+    center: [32.72, -117.15], zoom: 11,
+    stcofips: ['06073'],
+    neighborhoods: [
+      { name: 'Downtown',        lat: 32.7157, lng: -117.1611 },
+      { name: 'Little Italy',    lat: 32.7237, lng: -117.1683 },
+      { name: 'East Village',    lat: 32.7076, lng: -117.1517 },
+      { name: 'Bankers Hill',    lat: 32.7330, lng: -117.1612 },
+      { name: 'Golden Hill',     lat: 32.7168, lng: -117.1234 },
+      { name: 'Barrio Logan',    lat: 32.6961, lng: -117.1355 },
+      { name: 'Hillcrest',       lat: 32.7438, lng: -117.1513 },
+      { name: 'Mission Hills',   lat: 32.7450, lng: -117.1690 },
+      { name: 'North Park',      lat: 32.7326, lng: -117.1296 },
+      { name: 'South Park',      lat: 32.7246, lng: -117.1326 },
+      { name: 'Univ. Heights',   lat: 32.7520, lng: -117.1353 },
+      { name: 'Normal Heights',  lat: 32.7631, lng: -117.1123 },
+      { name: 'City Heights',    lat: 32.7490, lng: -117.1069 },
+      { name: 'Kensington',      lat: 32.7567, lng: -117.0987 },
+      { name: 'Old Town',        lat: 32.7540, lng: -117.1963 },
+      { name: 'Mission Valley',  lat: 32.7683, lng: -117.1500 },
+      { name: 'Ocean Beach',     lat: 32.7481, lng: -117.2463 },
+      { name: 'Mission Beach',   lat: 32.7716, lng: -117.2545 },
+      { name: 'Pacific Beach',   lat: 32.7997, lng: -117.2518 },
+      { name: 'Bay Park',        lat: 32.7867, lng: -117.1985 },
+      { name: 'Point Loma',      lat: 32.7296, lng: -117.2437 },
+      { name: 'Liberty Station', lat: 32.7388, lng: -117.2127 },
+      { name: 'Coronado',        lat: 32.6859, lng: -117.1831 },
+      { name: 'College Area',    lat: 32.7714, lng: -117.0709 },
+      { name: 'Del Cerro',       lat: 32.7747, lng: -117.0574 },
+      { name: 'San Carlos',      lat: 32.7848, lng: -117.0337 },
+      { name: 'Tierrasanta',     lat: 32.8237, lng: -117.0919 },
+      { name: 'Encanto',         lat: 32.7097, lng: -117.0672 },
+      { name: 'Clairemont',      lat: 32.8195, lng: -117.1767 },
+      { name: 'Kearny Mesa',     lat: 32.8210, lng: -117.1281 },
+      { name: 'Mira Mesa',       lat: 32.9169, lng: -117.1408 },
+      { name: 'Scripps Ranch',   lat: 32.9453, lng: -117.0778 },
+      { name: 'UTC',             lat: 32.8659, lng: -117.2094 },
+      { name: 'Carmel Valley',   lat: 32.9256, lng: -117.2027 },
+      { name: 'La Jolla',        lat: 32.8328, lng: -117.2713 },
+      { name: 'Del Mar',         lat: 32.9595, lng: -117.2653 },
+      { name: 'Encinitas',       lat: 33.0369, lng: -117.2920 },
+      { name: 'Carlsbad',        lat: 33.1581, lng: -117.3506 },
+      { name: 'Oceanside',       lat: 33.1959, lng: -117.3795 },
+      { name: 'Rancho Bernardo', lat: 33.0128, lng: -117.0808 },
+      { name: 'Poway',           lat: 32.9628, lng: -117.0359 },
+      { name: 'Escondido',       lat: 33.1192, lng: -117.0864 },
+      { name: 'National City',   lat: 32.6781, lng: -117.0992 },
+      { name: 'Chula Vista',     lat: 32.6401, lng: -117.0842 },
+      { name: 'La Mesa',         lat: 32.7678, lng: -117.0228 },
+      { name: 'El Cajon',        lat: 32.7948, lng: -116.9625 },
+      { name: 'Santee',          lat: 32.8384, lng: -116.9739 },
+      { name: 'Spring Valley',   lat: 32.7451, lng: -117.0084 },
+    ]
+  },
+  {
+    id: 'san-francisco', name: 'San Francisco',
+    center: [37.72, -122.32], zoom: 11,
+    stcofips: ['06075','06001','06081'],
+    neighborhoods: [
+      { name: 'Financial District', lat: 37.7941, lng: -122.3991 },
+      { name: 'SoMa',               lat: 37.7785, lng: -122.4056 },
+      { name: 'Mission',            lat: 37.7599, lng: -122.4148 },
+      { name: 'Castro',             lat: 37.7609, lng: -122.4350 },
+      { name: 'Haight-Ashbury',     lat: 37.7692, lng: -122.4481 },
+      { name: 'Inner Richmond',     lat: 37.7780, lng: -122.4810 },
+      { name: 'Outer Sunset',       lat: 37.7566, lng: -122.4872 },
+      { name: 'North Beach',        lat: 37.8060, lng: -122.4103 },
+      { name: 'Hayes Valley',       lat: 37.7759, lng: -122.4245 },
+      { name: 'Noe Valley',         lat: 37.7490, lng: -122.4326 },
+      { name: 'Potrero Hill',       lat: 37.7601, lng: -122.4011 },
+      { name: 'Dogpatch',           lat: 37.7577, lng: -122.3903 },
+      { name: 'Bernal Heights',     lat: 37.7387, lng: -122.4159 },
+      { name: 'Pacific Heights',    lat: 37.7924, lng: -122.4382 },
+      { name: 'Marina',             lat: 37.8020, lng: -122.4360 },
+      { name: 'Oakland',            lat: 37.8044, lng: -122.2712 },
+      { name: 'Berkeley',           lat: 37.8716, lng: -122.2727 },
+      { name: 'Emeryville',         lat: 37.8340, lng: -122.2852 },
+      { name: 'Alameda',            lat: 37.7652, lng: -122.2416 },
+      { name: 'Daly City',          lat: 37.6879, lng: -122.4702 },
+      { name: 'South SF',           lat: 37.6547, lng: -122.4077 },
+      { name: 'San Mateo',          lat: 37.5630, lng: -122.3255 },
+      { name: 'Redwood City',       lat: 37.4852, lng: -122.2364 },
+      { name: 'Palo Alto',          lat: 37.4419, lng: -122.1430 },
+      { name: 'Fremont',            lat: 37.5485, lng: -121.9886 },
+    ]
+  },
+  {
+    id: 'san-jose', name: 'San Jose',
+    center: [37.33, -121.93], zoom: 11,
+    stcofips: ['06085'],
+    neighborhoods: [
+      { name: 'Downtown',      lat: 37.3382, lng: -121.8863 },
+      { name: 'Willow Glen',   lat: 37.3085, lng: -121.8935 },
+      { name: 'East San Jose', lat: 37.3547, lng: -121.8285 },
+      { name: 'Almaden',       lat: 37.2652, lng: -121.8754 },
+      { name: 'Evergreen',     lat: 37.3081, lng: -121.7874 },
+      { name: 'Berryessa',     lat: 37.3869, lng: -121.8569 },
+      { name: 'Milpitas',      lat: 37.4323, lng: -121.8996 },
+      { name: 'Santa Clara',   lat: 37.3541, lng: -121.9552 },
+      { name: 'Sunnyvale',     lat: 37.3688, lng: -122.0363 },
+      { name: 'Mountain View', lat: 37.3861, lng: -122.0839 },
+      { name: 'Campbell',      lat: 37.2872, lng: -121.9499 },
+      { name: 'Los Gatos',     lat: 37.2358, lng: -121.9624 },
+      { name: 'Cupertino',     lat: 37.3230, lng: -122.0322 },
+      { name: 'Saratoga',      lat: 37.2638, lng: -122.0231 },
+    ]
+  },
+  {
+    id: 'washington-dc', name: 'Washington DC',
+    center: [38.90, -77.03], zoom: 12,
+    stcofips: ['11001','51013','51510'],
+    neighborhoods: [
+      { name: 'Georgetown',       lat: 38.9076, lng: -77.0723 },
+      { name: 'Dupont Circle',    lat: 38.9096, lng: -77.0434 },
+      { name: 'Logan Circle',     lat: 38.9091, lng: -77.0304 },
+      { name: 'U Street',         lat: 38.9170, lng: -77.0303 },
+      { name: 'Shaw',             lat: 38.9135, lng: -77.0228 },
+      { name: 'Columbia Heights', lat: 38.9284, lng: -77.0351 },
+      { name: 'Petworth',         lat: 38.9374, lng: -77.0252 },
+      { name: 'Capitol Hill',     lat: 38.8899, lng: -76.9981 },
+      { name: 'Navy Yard',        lat: 38.8742, lng: -77.0052 },
+      { name: 'NoMa',             lat: 38.9052, lng: -77.0048 },
+      { name: 'Anacostia',        lat: 38.8680, lng: -76.9874 },
+      { name: 'Congress Heights', lat: 38.8428, lng: -77.0007 },
+      { name: 'Rosslyn',          lat: 38.8962, lng: -77.0711 },
+      { name: 'Clarendon',        lat: 38.8865, lng: -77.0944 },
+      { name: 'Crystal City',     lat: 38.8543, lng: -77.0513 },
+      { name: 'Alexandria',       lat: 38.8048, lng: -77.0469 },
+      { name: 'Bethesda',         lat: 38.9840, lng: -77.0947 },
+      { name: 'Silver Spring',    lat: 38.9912, lng: -77.0261 },
+    ]
+  },
+
+  {
+    id: 'phoenix', name: 'Phoenix',
+    center: [33.45, -112.07], zoom: 11,
+    stcofips: ['04013'],
+    neighborhoods: [
+      { name: 'Downtown Phoenix', lat: 33.4484, lng: -112.0740 },
+      { name: 'Tempe',            lat: 33.4255, lng: -111.9400 },
+      { name: 'Scottsdale',       lat: 33.4942, lng: -111.9261 },
+      { name: 'Mesa',             lat: 33.4152, lng: -111.8315 },
+      { name: 'Chandler',         lat: 33.3062, lng: -111.8413 },
+      { name: 'Glendale',         lat: 33.5386, lng: -112.1859 },
+      { name: 'Midtown Phoenix',  lat: 33.4797, lng: -112.0739 },
+      { name: 'Arcadia',          lat: 33.4956, lng: -111.9828 },
+      { name: 'Ahwatukee',        lat: 33.3300, lng: -112.0100 },
+      { name: 'Paradise Valley',  lat: 33.5331, lng: -111.9442 },
+    ]
+  },
+  {
+    id: 'jacksonville', name: 'Jacksonville',
+    center: [30.33, -81.66], zoom: 11,
+    stcofips: ['12031'],
+    neighborhoods: [
+      { name: 'San Marco',        lat: 30.3050, lng: -81.6517 },
+      { name: 'Riverside',        lat: 30.3194, lng: -81.6858 },
+      { name: 'Avondale',         lat: 30.3242, lng: -81.7011 },
+      { name: 'Downtown Jax',     lat: 30.3322, lng: -81.6557 },
+      { name: 'San Jose',         lat: 30.2611, lng: -81.5883 },
+      { name: 'Southside',        lat: 30.2567, lng: -81.5500 },
+      { name: 'Mandarin',         lat: 30.1794, lng: -81.6025 },
+      { name: 'Neptune Beach',    lat: 30.3150, lng: -81.3978 },
+      { name: 'Murray Hill',      lat: 30.3139, lng: -81.6842 },
+      { name: 'Springfield',      lat: 30.3414, lng: -81.6497 },
+    ]
+  }
+];
+
+// Derive stcofips list and state groupings from MARKETS
+const ALL_STCOFIPS = MARKETS.flatMap(m => m.stcofips);
+const STATE_GROUPS = {};
+ALL_STCOFIPS.forEach(fips => {
+  const st = fips.slice(0,2), co = fips.slice(2);
+  if (!STATE_GROUPS[st]) STATE_GROUPS[st] = [];
+  if (!STATE_GROUPS[st].includes(co)) STATE_GROUPS[st].push(co);
+});
+
+const TOTAL_JOBS = Object.keys(STATE_GROUPS).length + ALL_STCOFIPS.length;
+let doneJobs = 0;
+function tick(msg) {
+  doneJobs++;
+  const pct = Math.min(Math.round(doneJobs / TOTAL_JOBS * 100), 100);
+  document.getElementById('load-bar').style.width = pct + '%';
+  document.getElementById('load-pct').textContent = pct + '%';
+  if (msg) document.getElementById('load-msg').textContent = msg;
+}
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// COLOR SCALE
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+function hexToRgb(h) {
+  return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+}
+function rgbToHex(r,g,b) {
+  return '#'+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+}
+function getColor(v) {
+  if (v == null || isNaN(v)) return '#cccccc';
+  const t = Math.max(0, Math.min(v/100, 1));
+  const raw = t*(RAMP.length-1), i = Math.floor(raw), f = raw-i;
+  if (i >= RAMP.length-1) return RAMP[RAMP.length-1];
+  const [r1,g1,b1] = hexToRgb(RAMP[i]), [r2,g2,b2] = hexToRgb(RAMP[i+1]);
+  return rgbToHex(r1+(r2-r1)*f, g1+(g2-g1)*f, b1+(b2-b1)*f);
+}
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// PERCENTILE RANK â binary search O(log n)
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+function percentileRankBinary(sortedArr, val) {
+  if (val == null || sortedArr.length === 0) return null;
+  let lo = 0, hi = sortedArr.length;
+  while (lo < hi) {
+    const mid = (lo+hi) >> 1;
+    if (sortedArr[mid] <= val) lo = mid+1; else hi = mid;
+  }
+  return parseFloat((lo / sortedArr.length * 100).toFixed(1));
+}
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// DATA FETCHING
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+async function fetchCensusForState(state, counties) {
+  const url = `https://api.census.gov/data/2021/acs/acs5?get=${DEMO_VARS}&for=tract:*&in=state:${state}%20county:${counties.join(',')}`;
+  console.log('[CENSUS] Fetching state', state, ':', url);
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Census ${state} HTTP ${r.status}`);
+  const rows = await r.json();
+  if (!Array.isArray(rows) || rows.length < 2) throw new Error(`Census ${state}: no data`);
+  const headers = rows[0];
+  const lookup = {};
+  rows.slice(1).forEach(row => {
+    if (!Array.isArray(row)) return;
+    const obj = {};
+    headers.forEach((h,i) => { obj[h] = row[i]; });
+    headers.forEach(h => {
+      if (!['NAME','state','county','tract'].includes(h)) {
+        const n = parseFloat(obj[h]);
+        obj[h] = (isNaN(n) || n < -100000) ? null : n;
+      }
+    });
+    const geoid = (obj.state||'')+(obj.county||'')+(obj.tract||'');
+    if (geoid.length === 11) lookup[geoid] = obj;
+  });
+  console.log(`[CENSUS] State ${state}: ${Object.keys(lookup).length} tracts`);
+  return lookup;
+}
+
+function normalizeGeoFeature(f, stcofips) {
+  const p = f.properties;
+  if (!p.GEOID && p.GEO_ID)     p.GEOID = p.GEO_ID.replace(/^1400000US/, '');
+  else if (!p.GEOID && p.STATE) p.GEOID = (p.STATE||'')+(p.COUNTY||'')+(p.TRACT||'');
+  if (!p.NAMELSAD && p.NAME)    p.NAMELSAD = p.NAME;
+  p._stcofips = stcofips;
+}
+
+async function fetchTractsForCounty(stcofips) {
+  const state  = stcofips.slice(0,2);
+  const county = stcofips.slice(2);
+  const WHERES = [
+    `STCOFIPS='${stcofips}'`,
+    `STATE='${state}' AND COUNTY='${county}'`,
+    `GEOID LIKE '${stcofips}%'`,
+  ];
+  const BASE = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/0/query';
+
+  for (const where of WHERES) {
+    try {
+      const features = [];
+      let offset = 0;
+      while (true) {
+        const params = new URLSearchParams({
+          where, outFields: '*', returnGeometry: 'true',
+          f: 'geojson', resultRecordCount: 1000, resultOffset: offset,
+        });
+        const resp = await fetch(`${BASE}?${params}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (!data || !Array.isArray(data.features) || data.features.length === 0) break;
+        data.features.forEach(f => normalizeGeoFeature(f, stcofips));
+        features.push(...data.features);
+        if (!data.exceededTransferLimit) break;
+        offset += 1000;
+        if (offset > 10000) break;
+      }
+      if (features.length > 0) {
+        console.log(`[GEO] ${stcofips}: ${features.length} tracts`);
+        return features;
+      }
+    } catch(e) {
+      console.warn(`[GEO] ${stcofips} (${where}):`, e.message);
+    }
+  }
+  console.warn(`[GEO] ${stcofips}: all attempts failed`);
+  return [];
+}
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// DATA PROCESSING
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+function pct(num, den) {
+  if (!den || num == null) return null;
+  return parseFloat(Math.max(0, Math.min(num/den*100, 100)).toFixed(1));
+}
+
+function computeMetrics(features, lookup) {
+  features.forEach(f => {
+    const p = f.properties;
+    const d = lookup[p.GEOID] || {};
+    const pop2234 = (
+      (d['B01001_010E']||0)+(d['B01001_011E']||0)+(d['B01001_012E']||0)+
+      (d['B01001_034E']||0)+(d['B01001_035E']||0)+(d['B01001_036E']||0)
+    );
+    const hh75k = (
+      (d['B19001_013E']||0)+(d['B19001_014E']||0)+(d['B19001_015E']||0)+
+      (d['B19001_016E']||0)+(d['B19001_017E']||0)
+    );
+    const hhNokids = (d['B11005_001E']||0) - (d['B11005_002E']||0);
+    const renterCount = d['B25003_003E'] || 0;
+    const collegeCount = (
+      (d['B15003_022E']||0)+(d['B15003_023E']||0)+
+      (d['B15003_024E']||0)+(d['B15003_025E']||0)
+    );
+    const soloCount = d['B11001_008E'] || 0;
+    p.total_pop      = d['B01001_001E'] || null;
+    p.pop_22_34      = d['B01001_001E'] ? Math.round(pop2234) : null;
+    p.count_hh_75k   = d['B19001_001E'] ? Math.round(hh75k)  : null;
+    p.count_hh_nokids= d['B11005_001E'] ? Math.round(hhNokids): null;
+    p.count_renters  = d['B25003_001E'] ? Math.round(renterCount)  : null;
+    p.count_college  = d['B15003_001E'] ? Math.round(collegeCount) : null;
+    p.count_solo     = d['B11001_001E'] ? Math.round(soloCount)    : null;
+    p.pct_22_34      = pct(pop2234,      d['B01001_001E']);
+    p.pct_75k_plus   = pct(hh75k,        d['B19001_001E']);
+    p.pct_no_children= pct(hhNokids,     d['B11005_001E']);
+    p.pct_renter     = pct(renterCount,  d['B25003_001E']);
+    p.pct_college    = pct(collegeCount, d['B15003_001E']);
+    p.pct_solo_hh    = pct(soloCount,    d['B11001_001E']);
+    p.tract_name     = d['NAME'] || p.NAMELSAD;
+    p._market_name   = (MARKETS.find(m => m.stcofips.includes(p._stcofips)) || {}).name || '';
+    p._osm_count     = 0;
+    const walkTotal  = +(d['B08301_001E']) || 0;
+    const walkActive = (+(d['B08301_018E'])||0)+(+(d['B08301_019E'])||0)+(+(d['B08301_021E'])||0);
+    p.pct_walk_transit = walkTotal > 0 ? Math.round(walkActive/walkTotal*1000)/10 : null;
+  });
+}
+
+function computeGlobalRanks(features) {
+  const keys = ['pct_22_34','pct_75k_plus','pct_no_children','pct_renter','pct_college','pct_solo_hh','pop_22_34'];
+  const sorted = {};
+  keys.forEach(k => {
+    sorted[k] = features.map(f => f.properties[k]).filter(v => v != null).sort((a,b) => a-b);
+  });
+  features.forEach(f => {
+    const p = f.properties;
+    let sum = 0, cnt = 0;
+    ['pct_22_34','pct_75k_plus','pct_no_children','pct_renter','pct_college','pct_solo_hh'].forEach(m => {
+      const r = percentileRankBinary(sorted[m], p[m]);
+      p[m+'_rank'] = r;
+      if (r != null) { sum += r; cnt++; }
+    });
+    p.opportunity_index = cnt >= 4 ? parseFloat((sum/cnt).toFixed(1)) : null;
+    p.count_22_34 = percentileRankBinary(sorted['pop_22_34'], p.pop_22_34);
+    const idx = p.opportunity_index;
+    if      (idx == null) p.tier = 'Insufficient data';
+    else if (idx >= 75)   p.tier = 'ð¥ High Opportunity';
+    else if (idx >= 50)   p.tier = 'ð Moderate-High';
+    else if (idx >= 25)   p.tier = 'ð Moderate-Low';
+    else                  p.tier = 'â¬ï¸ Low Opportunity';
+  });
+}
+
+function computeOSMRanks(features) {
+  const counts = features.map(f => f.properties._osm_count || 0);
+  const sorted = [...counts].sort((a,b) => a-b);
+  features.forEach(f => {
+    f.properties.sports_infra_score = percentileRankBinary(sorted, f.properties._osm_count || 0);
+  });
+}
+function computeCentroid(geometry) {
+  if (!geometry) return null;
+  let coords;
+  if (geometry.type === 'Polygon') coords = geometry.coordinates[0];
+  else if (geometry.type === 'MultiPolygon') coords = geometry.coordinates[0][0];
+  else return null;
+  if (!coords || !coords.length) return null;
+  const n = coords.length;
+  const lng = coords.reduce((s,c)=>s+c[0],0)/n;
+  const lat = coords.reduce((s,c)=>s+c[1],0)/n;
+  return [lat,lng];
+}
+function haversineKm(lat1,lng1,lat2,lng2) {
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+async function fetchOSMForMarket(market, mf) {
+  let minLat=Infinity,maxLat=-Infinity,minLng=Infinity,maxLng=-Infinity;
+  mf.forEach(f=>{const c=computeCentroid(f.geometry);if(c){minLat=Math.min(minLat,c[0]);maxLat=Math.max(maxLat,c[0]);minLng=Math.min(minLng,c[1]);maxLng=Math.max(maxLng,c[1]);}});
+  if(!isFinite(minLat))return [];
+  const buf=0.04;
+  const bb=`${(minLat-buf).toFixed(4)},${(minLng-buf).toFixed(4)},${(maxLat+buf).toFixed(4)},${(maxLng+buf).toFixed(4)}`;
+  const q=`[out:json][timeout:25];(node["leisure"~"^(sports_centre|pitch|fitness_centre|track|swimming_pool)$"](${bb});way["leisure"~"^(sports_centre|pitch|fitness_centre|track|swimming_pool)$"](${bb});node["amenity"="gym"](${bb});way["amenity"="gym"](${bb});node["sport"][!"golf"][!"horse_racing"](${bb});way["sport"][!"golf"][!"horse_racing"](${bb}););out center;`;
+  const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'data='+encodeURIComponent(q)});
+  if(!r.ok)throw new Error('Overpass '+r.status);
+  return (await r.json()).elements||[];
+}
+function assignOSMToTracts(els, mf) {
+  const td=mf.map(f=>({feature:f,centroid:computeCentroid(f.geometry)})).filter(t=>t.centroid);
+  els.forEach(el=>{
+    const lat=el.lat??el.center?.lat, lng=el.lon??el.center?.lon;
+    if(lat==null||lng==null)return;
+    let near=null,nd=2.0;
+    td.forEach(t=>{const d=haversineKm(lat,lng,t.centroid[0],t.centroid[1]);if(d<nd){near=t;nd=d;}});
+    if(near)near.feature.properties._osm_count=(near.feature.properties._osm_count||0)+1;
+  });
+}
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// MAP
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+let MAP, GEO_LAYER, ALL_FEATURES = [], currentMetric = 'opportunity_index';
+let marketLabelsGroup, nbhdLabelsGroup, currentMarketId = null;
+
+function initMap() {
+  MAP = L.map('map', { zoomControl: false }).setView([38.5, -96], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: 'Â© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors Â© <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(MAP);
+  L.control.zoom({ position: 'bottomright' }).addTo(MAP);
+  MAP.on('zoomend', updateLabelVisibility);
+}
+
+function buildLayer(features) {
+  if (GEO_LAYER) GEO_LAYER.remove();
+  GEO_LAYER = L.geoJSON({ type:'FeatureCollection', features }, {
+    style: f => ({
+      fillColor: getColor(f.properties[currentMetric]),
+      weight: 0.5, opacity: 1, color: '#999', fillOpacity: 0.75,
+    }),
+    onEachFeature: (f, layer) => {
+      layer.on({
+        mouseover(e) {
+          e.target.setStyle({ weight: 2, color: '#333', fillOpacity: 0.93 });
+          e.target.bringToFront();
+          renderTooltip(f.properties);
+          document.getElementById('tooltip').style.display = 'block';
+        },
+        mousemove(e) { positionTooltip(e.originalEvent); },
+        mouseout(e) {
+          GEO_LAYER.resetStyle(e.target);
+          document.getElementById('tooltip').style.display = 'none';
+        },
+        click() { renderStats(f.properties); }
+      });
+    }
+  }).addTo(MAP);
+}
+
+// Ã¢ââ¬Ã¢ââ¬ Labels Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+function buildLabelLayers() {
+  marketLabelsGroup = L.layerGroup();
+  nbhdLabelsGroup   = L.layerGroup();
+
+  // Market labels (shown at low zoom)
+  MARKETS.forEach(m => {
+    L.marker(m.center, {
+      icon: L.divIcon({
+        className: 'market-label',
+        html: `<span class="market-text">${m.name}</span>`,
+        iconSize: [0,0], iconAnchor: [0,0],
+      }),
+      interactive: false, keyboard: false,
+    }).addTo(marketLabelsGroup);
+  });
+
+  // Neighborhood labels (shown at high zoom)
+  MARKETS.forEach(m => {
+    m.neighborhoods.forEach(n => {
+      L.marker([n.lat, n.lng], {
+        icon: L.divIcon({
+          className: 'nbhd-label',
+          html: `<span class="nbhd-text">${n.name}</span>`,
+          iconSize: [0,0], iconAnchor: [0,0],
+        }),
+        interactive: false, keyboard: false,
+      }).addTo(nbhdLabelsGroup);
+    });
+  });
+}
+
+function updateLabelVisibility() {
+  const z = MAP.getZoom();
+  if (z <= 8) {
+    if (!MAP.hasLayer(marketLabelsGroup)) marketLabelsGroup.addTo(MAP);
+    if (MAP.hasLayer(nbhdLabelsGroup)) MAP.removeLayer(nbhdLabelsGroup);
+  } else if (z >= 11) {
+    if (MAP.hasLayer(marketLabelsGroup)) MAP.removeLayer(marketLabelsGroup);
+    if (!MAP.hasLayer(nbhdLabelsGroup)) nbhdLabelsGroup.addTo(MAP);
+  } else {
+    if (MAP.hasLayer(marketLabelsGroup)) MAP.removeLayer(marketLabelsGroup);
+    if (MAP.hasLayer(nbhdLabelsGroup)) MAP.removeLayer(nbhdLabelsGroup);
+  }
+}
+
+// Ã¢ââ¬Ã¢ââ¬ Tooltip Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+function fmt(v, s) { return (v == null || isNaN(v)) ? 'â' : v.toFixed(1)+s; }
+
+function renderTooltip(p) {
+  const fmt  = v => v == null ? 'â' : v.toFixed(1) + '%';
+  const rank = v => v == null ? 'â' : Math.round(v) + '/100';
+  const color = s => {
+    if (s == null) return '#888';
+    if (s >= 75) return '#bd0026';
+    if (s >= 50) return '#f03b20';
+    if (s >= 25) return '#fd8d3c';
+    return '#fecc5c';
+  };
+  const $ = id => document.getElementById(id);
+  $('tt-bar').style.background  = color(p.opportunity_index);
+  $('tt-name').textContent       = p.tract_name || p.NAMELSAD || '';
+  $('tt-score').innerHTML        = p.opportunity_index != null
+    ? '<strong>' + Math.round(p.opportunity_index) + '</strong><span>/100</span>'
+    : '<span>No data</span>';
+  $('tt-tier').textContent       = p.tier || '';
+  $('tt-age').textContent        = fmt(p.pct_22_34);
+  $('tt-inc').textContent        = fmt(p.pct_75k_plus);
+  $('tt-kid').textContent        = fmt(p.pct_no_children);
+  $('tt-rent').textContent       = fmt(p.pct_renter);
+  $('tt-coll').textContent       = fmt(p.pct_college);
+  $('tt-solo').textContent       = fmt(p.pct_solo_hh);
+  $('tt-osm').textContent        = rank(p.sports_infra_score);
+  $('tt-market').textContent     = p._market_name || '';
+}
+
+function positionTooltip(e) {
+  const tt = document.getElementById('tooltip');
+  const bx = window.innerWidth  - tt.offsetWidth  - 20;
+  const by = window.innerHeight - tt.offsetHeight - 20;
+  tt.style.left = Math.min(tt.clientX+16, bx) + 'px';
+  tt.style.top  = Math.min(tt.clientY-10, by) + 'px';
+}
+document.addEventListener('mousemove', e => {
+  const tt = document.getElementById('tooltip');
+  if (tt.style.display !== 'none') positionTooltip(e);
+});
+
+// Ã¢ââ¬Ã¢ââ¬ Stats panel Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+function barRow(label, val, count, unit) {
+  const pctStr = val != null ? val.toFixed(1)+'%' : 'Ã¢Å¾â¬â';
+  const cntStr = count != null ? `<span style="font-size:10px;color:#bbb;font-weight:400"> Â· ${count.toLocaleString()}${unit||''}</span>` : '';
+  return `<div class="s-row">
+    <div class="s-row-top"><span class="s-lbl">${label}</span><span class="s-val">${pctStr}${cntStr}</span></div>
+    <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(val||0,100)}%;background:#e05c26"></div></div>
+  </div>`;
+}
+
+function renderStats(p) {
+  const el = document.getElementById('stats-content');
+  if (!el) return;
+  const fmt  = v => v == null ? 'â' : v.toFixed(1) + '%';
+  const rank = v => v == null ? 'â' : Math.round(v) + '/100';
+  const num  = v => v == null ? 'â' : (+v).toLocaleString();
+  const row  = (lbl, val) =>
+    '<div style="display:flex;justify-content:space-between;padding:3px 0;' +
+    'border-bottom:1px solid rgba(255,255,255,.1)"><span style="opacity:.75">' +
+    lbl + '</span><strong>' + val + '</strong></div>';
+  const sep  = lbl =>
+    '<div style="font-size:.7em;opacity:.55;margin:7px 0 2px;text-transform:uppercase;' +
+    'letter-spacing:.08em">' + lbl + '</div>';
+  el.innerHTML =
+    '<div style="font-weight:bold;margin-bottom:3px">' + (p.tract_name||'Census Tract') + '</div>' +
+    '<div style="opacity:.65;font-size:.8em;margin-bottom:8px">' + (p._market_name||'') + '</div>' +
+    row('Opportunity Score', rank(p.opportunity_index)) +
+    row('Tier', p.tier || 'â') +
+    sep('Demographics') +
+    row('Ages 22â34', fmt(p.pct_22_34) + ' (' + num(p.pop_22_34) + ')') +
+    row('Income $75k+',   fmt(p.pct_75k_plus) + ' (' + num(p.count_hh_75k) + ' HH)') +
+    row('No-Children HH', fmt(p.pct_no_children) + ' (' + num(p.count_hh_nokids) + ')') +
+    row('Renter Rate',    fmt(p.pct_renter) + ' (' + num(p.count_renters) + ')') +
+    row('College Grad',   fmt(p.pct_college) + ' (' + num(p.count_college) + ')') +
+    row('Solo HH',        fmt(p.pct_solo_hh) + ' (' + num(p.count_solo) + ')') +
+    sep('Infrastructure') +
+    row('Sports Infra',   rank(p.sports_infra_score) + ' (' + num(p._osm_count) + ' sites)');
+}
+
+function renderSummary(features, label) {
+  const valid  = features.filter(f => f.properties.opportunity_index != null);
+  const high   = valid.filter(f => f.properties.opportunity_index >= 75).length;
+  const modhi  = valid.filter(f => f.properties.opportunity_index >= 50 && f.properties.opportunity_index < 75).length;
+  const totPop = valid.reduce((s,f) => s + (f.properties.total_pop  || 0), 0);
+  const tarPop = valid.reduce((s,f) => s + (f.properties.pop_22_34  || 0), 0);
+  document.getElementById('stats-content').innerHTML = `
+    <div class="s-name">${label || 'All 13 Markets'}</div>
+    <div class="s-summary-row"><span>ð¥ High Opportunity tracts</span><strong>${high.toLocaleString()}</strong></div>
+    <div class="s-summary-row"><span>ð Moderate-High tracts</span><strong>${modhi.toLocaleString()}</strong></div>
+    <div class="s-summary-row"><span>ð Total tracts analyzed</span><strong>${valid.length.toLocaleString()}</strong></div>
+    <div class="s-summary-row"><span>ð¤ Target-age residents</span><strong>${Math.round(tarPop/1000).toLocaleString()}k</strong></div>
+    <div class="s-summary-row"><span>ðÃ¯Â¸Â Total population</span><strong>${Math.round(totPop/1000).toLocaleString()}k</strong></div>
+    <div class="s-hint" style="margin-top:8px">Click any census tract for details</div>`;
+}
+
+// Ã¢ââ¬Ã¢ââ¬ Market selector Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+function populateMarketDropdown() {
+  const sel = document.getElementById('market-select');
+  [...MARKETS].sort((a,b) => a.name.localeCompare(b.name)).forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id; opt.textContent = m.name;
+    sel.appendChild(opt);
+  });
+}
+
+function flyToMarket(val) {
+  if (!val) {
+    currentMarketId = null;
+    MAP.flyTo([38.5,-96], 4, { duration: 1.2 });
+    renderSummary(ALL_FEATURES);
+    return;
+  }
+  const m = MARKETS.find(x => x.id === val);
+  if (!m) return;
+  currentMarketId = val;
+  MAP.flyTo(m.center, m.zoom, { duration: 1.2 });
+  const mf = ALL_FEATURES.filter(f => m.stcofips.includes(f.properties._stcofips));
+  renderSummary(mf, m.name);
+}
+
+// Ã¢ââ¬Ã¢ââ¬ Metric switcher Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬Ã¢ââ¬
+function switchMetric(btn) {
+  currentMetric = btn.dataset.m;
+  document.querySelectorAll('.mbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('legend-label').textContent = METRIC_META[currentMetric].label;
+  if (ALL_FEATURES.length) buildLayer(ALL_FEATURES);
+}
+
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// BOOTSTRAP
+// Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+(async () => {
+  initMap();
+  buildLabelLayers();
+  updateLabelVisibility();
+  populateMarketDropdown();
+
+  try {
+    document.getElementById('load-msg').textContent = 'Fetching Census dataâ¦';
+
+    // Census calls: one per state group
+    const censusPromises = Object.entries(STATE_GROUPS).map(([state, counties]) =>
+      fetchCensusForState(state, counties)
+        .then(r => { tick(`Census: state ${state} Ã¢Åâ`); return r; })
+        .catch(e => { tick(); console.warn(`Census ${state}:`, e.message); return {}; })
+    );
+
+    // TIGER calls: one per county
+    const geoPromises = ALL_STCOFIPS.map(fips =>
+      fetchTractsForCounty(fips)
+        .then(r => { tick(`Geometry: ${fips} (${r.length} tracts)`); return r; })
+        .catch(e => { tick(); console.warn(`GEO ${fips}:`, e.message); return []; })
+    );
+
+    const [censusResults, geoResults] = await Promise.all([
+      Promise.all(censusPromises),
+      Promise.all(geoPromises),
+    ]);
+
+    document.getElementById('load-msg').textContent = 'Computing opportunity indexâ¦';
+
+    // Merge census lookup
+    const lookup = Object.assign({}, ...censusResults);
+    console.log(`[PROCESS] Total Census tracts in lookup: ${Object.keys(lookup).length}`);
+
+    // Merge all geometry features
+    const allFeatures = geoResults.flat();
+    console.log(`[PROCESS] Total geo features: ${allFeatures.length}`);
+
+    // Compute metrics and global percentile ranks
+    computeMetrics(allFeatures, lookup);
+    computeGlobalRanks(allFeatures);
+
+    ALL_FEATURES = allFeatures;
+    buildLayer(ALL_FEATURES);
+    renderSummary(ALL_FEATURES);
+
+    document.getElementById('loading').style.display = 'none';
+  // Phase 2 â OSM sports facilities load in background
+  (async () => {
+    try {
+      for (const market of MARKETS) {
+        const mf = allFeatures.filter(f => f.properties._market_name === market.name);
+        if (!mf.length) continue;
+        const els = await fetchOSMForMarket(market, mf);
+        assignOSMToTracts(els, mf);
+      }
+      computeOSMRanks(allFeatures);
+      buildLayer(allFeatures);
+    } catch(e) { console.warn('OSM phase 2 failed:', e); }
+  })();
+
+  } catch (err) {
+    console.error('[INIT ERROR]', err);
+    document.getElementById('loading').style.display   = 'none';
+    document.getElementById('error-box').style.display = 'block';
+    document.getElementById('error-msg').textContent   = 'A data source failed. Open DevTools Ã¢â â Console (F12) for details.';
+    document.getElementById('error-detail').textContent = err.message || String(err);
+  }
+})();
+</script>
+
+<script>
+const CHARLESTON_VENUES=[
+{n:'Ackerman Park',t:'F',a:'55 Sycamore Avenue, Charleston, SC 29424',lat:32.936408,lng:-80.060652},
+{n:'Apex Volleyball',t:'F',a:'7600 Southrail Rd Bldg 100, North Charleston, SC 29420',lat:32.791939,lng:-79.954239},
+{n:'Arthur W Christopher Community Center',t:'F',a:'265 Fishburne St., Charleston, SC 29403',lat:32.726993,lng:-79.935753},
+{n:'Bayview Soccer Complex',t:'F',a:'1045 Fort Johnson Road, Charleston, SC 29412',lat:32.832776,lng:-80.095323},
+{n:'Bees Landing Recreation Center',t:'F',a:'1580 Ashley Gardens Blvd., Charleston, SC 29414',lat:32.792985,lng:-79.902915},
+{n:'Bishop England High School',t:'S',a:'363 Seven Farms Drive, Daniel Island, SC 29492',lat:32.790504,lng:-79.872197},
+{n:'Cheryll Woods - Flowers Soccer Complex',t:'F',a:'85 Patriots Point Rd, Mt Pleasant, SC 29464',lat:32.864563,lng:-79.898956},
+{n:'CrushYard',t:'B',a:'3365 S Morgans Point Rd, Mt Pleasant, SC 29466',lat:32.820557,lng:-79.993179},
+{n:'Daniel Rec Center',t:'F',a:'160 Fairbanks Dr, Charleston, SC 29492',lat:32.907277,lng:-79.976108},
+{n:'Deming Park',t:'F',a:'1030 5th St, Charleston, SC 29406',lat:32.824603,lng:-79.990010},
+{n:'Elks Lodge',t:'F',a:'1113 Sam Rittenberg Blvd, Charleston, SC 29407',lat:32.858034,lng:-79.915486},
+{n:'Etiwan Park',t:'F',a:'144-156 Etiwan Park St, Charleston, SC 29492',lat:32.729202,lng:-79.978892},
+{n:'Ferguson Village Park',t:'F',a:'1935 Ferguson Road, Charleston, SC 29412',lat:32.791374,lng:-79.998661},
+{n:'Forest Park Playground',t:'F',a:'780 West Oak Forest Drive, Charleston, SC 29407',lat:32.848787,lng:-79.911512},
+{n:'Freedom Park',t:'F',a:'985 Barfield Street, Charleston, SC 29492',lat:32.858367,lng:-79.912806},
+{n:'Govenors Park',t:'F',a:'Seven Farms Drive, Charleston, SC 29492',lat:32.791610,lng:-79.953894},
+{n:'Harmon Field',t:'F',a:'201 President Street, Charleston, SC 29403',lat:32.718745,lng:-80.077116},
+{n:'Haut Gap Recreation Complex',t:'F',a:'1861 Bohicket Road, Johns Island, SC 29455',lat:32.774177,lng:-79.927128},
+{n:'Hazel Parker Playground',t:'F',a:'70 East Bay Street, Charleston, SC 29401',lat:32.786859,lng:-79.786068},
+{n:'Isle of Palms County Park Rules',t:'F',a:'1-14th Ave., Isle of Palms, SC 29451',lat:32.738640,lng:-79.937808},
+{n:'James Island Recreation Complex',t:'F',a:'1088 Quail Drive, Charleston, SC 29412',lat:32.722741,lng:-80.084391},
+{n:'Johns Island Park',t:'F',a:'1727 Bozo Ln, Charleston, SC 29455',lat:32.883703,lng:-79.991539},
+{n:'Lents Field',t:'F',a:'1429 Wando Rd, North Charleston, SC 29405',lat:32.799285,lng:-79.939249},
+{n:'Martin Park (next to MLK Pool)',t:'F',a:'155 Jackson Street, Charleston, SC 29403',lat:32.816964,lng:-80.000038},
+{n:'Mary Utsey Playground / Orange Grove Park',t:'F',a:'1350 Orange Grove Road, Charleston, SC 29407',lat:32.800806,lng:-79.953692},
+{n:'McMahon Playground',t:'F',a:'55 Cleveland Street, Charleston, SC 29403',lat:32.903164,lng:-79.987456},
+{n:'Moultrie Middle School',t:'S',a:'645 Coleman Blvd, Mt Pleasant, SC 29464',lat:32.775387,lng:-79.969291},
+{n:'MWV/Kapstone Park - Westvaco',t:'F',a:'1206 Bentley Rd, North Charleston, SC 29406',lat:32.884383,lng:-79.991868},
+{n:'North Charleston Sports Compelx',t:'F',a:'1455 Monitor St, North Charleston, SC 29405',lat:32.894277,lng:-79.773739},
+{n:'Oceanside Academy',t:'F',a:'580 Faison Rd, Mt Pleasant, SC 29466, USA',lat:32.809221,lng:-79.867019},
+{n:'Palmetto Strikers',t:'F',a:'1007 Johnnie Dodds Blvd, Mt Pleasant, SC 29464',lat:32.825372,lng:-79.987554},
+{n:'Parkshore Park',t:'F',a:'1 Windsor Place, Charleston, SC 29407',lat:32.767905,lng:-79.992262},
+{n:'Plymouth Park',t:'F',a:'35 Plymouth Ave., Charleston, SC 29401',lat:32.786008,lng:-80.016637},
+{n:'Porter Gaud',t:'S',a:'26 Jamestown Rd, Charleston, SC 29407',lat:32.848762,lng:-79.909825},
+{n:'Randolph Park',t:'F',a:'1683 Pearlott St, Charleston, SC 29407',lat:32.729060,lng:-80.289745},
+{n:'Schroder Community Center',t:'F',a:'7224 Hwy. 162, Hollywood, SC 29449',lat:32.792445,lng:-79.934714},
+{n:'Shaw Community Center',t:'F',a:'20 Mary Street, Charleston, SC 29403',lat:32.923397,lng:-79.830788},
+{n:'Shipyard Park',t:'F',a:'2383 SC-41, Mt Pleasant, SC 29466, USA',lat:32.845445,lng:-79.876318},
+{n:'Skyzone',t:'F',a:'411 Wando Park Blvd, Mt Pleasant, SC 29464',lat:32.738640,lng:-79.937808},
+{n:'St. James-Santee Recreation Complex',t:'F',a:'1088 Quail Dr, Charleston, SC 29412',lat:32.799269,lng:-79.935272},
+{n:'St. Julian Devine Community Center',t:'F',a:'1 Cooper Street, Charleston, SC 29403',lat:32.725856,lng:-79.943174},
+{n:'Stephen Washington Park',t:'F',a:'1148 Fort Johnson Road, Charleston, SC 29412',lat:32.792005,lng:-79.958789},
+{n:'Stoney Field',t:'F',a:'300 Fishburne St, Charleston, SC 29403',lat:32.812892,lng:-80.030874},
+{n:'The Salvation Army Church of Charleston',t:'F',a:'2135 Ashley River Rd, Charleston, SC 29407',lat:32.713366,lng:-79.958293},
+{n:'Thomas Johnson Playground',t:'F',a:'1443 Secessionville Road, Charleston, SC 29412',lat:32.791374,lng:-79.998661},
+{n:'Thompson Hill Recreation Complex',t:'F',a:'1087 Roosevelt Rd, Awendaw, SC 29429',lat:32.791374,lng:-79.998661},
+{n:'W.L. Stephens Pool',t:'F',a:'780 West Oak Forest Dr, Charleston, SC 29407',lat:32.931837,lng:-80.132391},
+{n:'Wescott Park',t:'F',a:'9006 Dorchester Rd, North Charleston, SC 29420',lat:32.819178,lng:-80.054819},
+{n:'West Ashley Park',t:'F',a:'3601 Mary Ader Avenue, Charleston, SC 29414',lat:32.873352,lng:-79.772160},
+{n:'Daniel Island School',t:'S',a:'2365 Daniel Island Drive Charleston, SC 29492',lat:32.790050,lng:-79.989462},
+{n:'Charleston Sports Pub',t:'B',a:'1124 Sam Rittenberg Blvd, Charleston, SC 29407',lat:32.762109,lng:-79.987566},
+{n:'Charleston Sports Pub',t:'B',a:'1989 Maybank Hwy, Charleston, SC 29412',lat:32.762109,lng:-79.987566},
+{n:'Charleston Sports Pub',t:'B',a:'1909 N Hwy 17, Mt Pleasant, SC 29464',lat:32.762109,lng:-79.987566},
+{n:'The Shelter Kitchen + Bar',t:'B',a:'202 Coleman Blvd, Mt Pleasant, SC 29464',lat:32.792843,lng:-79.855539},
+{n:'My Father\'s Mustache',t:'B',a:'1405 Ben Sawyer Blvd #103, Mt Pleasant, SC 29464',lat:32.824241,lng:-80.037752},
+{n:'The Pub on 61',t:'B',a:'2366 Ashley River Rd, Charleston, SC 29414',lat:32.789307,lng:-79.947226},
+{n:'Fuel Charleston',t:'B',a:'211 Rutledge Ave, Charleston, SC 29403',lat:32.798039,lng:-79.934621},
+{n:'Bar Mash',t:'B',a:'701 Wonders Wy Suite 100-2, Charleston, SC 29403',lat:32.708238,lng:-79.964413},
+{n:'Bohemian Bull',t:'B',a:'1531 Folly Rd, Charleston, SC 29412',lat:32.729065,lng:-80.067090},
+{n:'Tattooed Moose',t:'B',a:'3328 Maybank Hwy, Johns Island, SC 29455',lat:32.793233,lng:-79.868359},
+{n:'Mix',t:'B',a:'730 Coleman Blvd, Mt Pleasant, SC 29464',lat:32.789241,lng:-79.936977},
+{n:'Share House',t:'B',a:'23 Ann St, Charleston, SC 29403',lat:32.792604,lng:-79.941233},
+{n:'Uptown Social',t:'B',a:'587 King St, Charleston, SC 29403',lat:32.805814,lng:-79.760120},
+{n:'Islander 71',t:'B',a:'80 41st Ave, Isle of Palms, SC 29451',lat:32.856098,lng:-79.918571}
+];
+
+const PHX_VENUES = [
+  {t:'F',n:'Tempe Beach Park',lat:33.4255,lng:-111.9400},
+  {t:'F',n:'Tempe Sports Complex',lat:33.4192,lng:-111.9235},
+  {t:'F',n:'Kiwanis Park',lat:33.3792,lng:-111.9267},
+  {t:'F',n:'Mitchell Park',lat:33.4028,lng:-111.9267},
+  {t:'F',n:'Palmer Park',lat:33.4789,lng:-112.0461},
+  {t:'F',n:'Stroud Park',lat:33.4756,lng:-112.0556},
+  {t:'F',n:'Daley Park',lat:33.4814,lng:-112.0833},
+  {t:'F',n:'Desert West Sports Complex',lat:33.4714,lng:-112.1564},
+  {t:'F',n:'Encanto Sports Complex',lat:33.4778,lng:-112.0889},
+  {t:'F',n:'Reach 11 Sports Complex',lat:33.6578,lng:-111.9878},
+  {t:'F',n:'Rose Mofford Sports Complex',lat:33.6122,lng:-112.1122},
+  {t:'F',n:'Papago Park',lat:33.4558,lng:-111.9456},
+  {t:'F',n:'Roadrunner Park',lat:33.6156,lng:-111.9900},
+  {t:'F',n:'Friendship Park',lat:33.5969,lng:-112.1261},
+  {t:'F',n:'Avondale Sand Volleyball',lat:33.4353,lng:-112.3494},
+  {t:'F',n:'Dinks & Dine Pickle Park',lat:33.5017,lng:-111.9272},
+  {t:'F',n:'Horizon Park',lat:33.5944,lng:-111.8678},
+  {t:'F',n:'Scottsdale Ranch Park',lat:33.5725,lng:-111.8892},
+  {t:'F',n:'Coronado Park',lat:33.4744,lng:-112.0667},
+  {t:'F',n:'Monterey Park',lat:33.4297,lng:-111.7900},
+  {t:'F',n:'Vista del Camino Park',lat:33.4822,lng:-111.8922},
+  {t:'F',n:'Indian School Park',lat:33.5019,lng:-111.9000},
+  {t:'F',n:'Rolling Hills Park',lat:33.5556,lng:-112.0278},
+  {t:'F',n:'Clark Park',lat:33.4528,lng:-112.0311},
+  {t:'F',n:'American Sports Complex',lat:33.4072,lng:-111.8972},
+  {t:'S',n:'Loma Linda School (Turf)',lat:33.4558,lng:-112.0189},
+  {t:'S',n:'Camelback High School',lat:33.5122,lng:-112.0244},
+  {t:'S',n:'Coronado High School',lat:33.4483,lng:-112.0494},
+  {t:'S',n:'Prince of Peace Lutheran',lat:33.5542,lng:-112.0883},
+  {t:'B',n:'AZ Wilderness Brewing',lat:33.4606,lng:-112.0714},
+  {t:'B',n:'Four Peaks Brewing',lat:33.4158,lng:-111.9083},
+  {t:'B',n:'Boycott Bar',lat:33.4483,lng:-112.0722},
+];
+
+const JAX_VENUES = [
+  {t:'F',n:'Abess Park',lat:30.2967,lng:-81.5189},
+  {t:'F',n:'Alexandra Oaks Park',lat:30.2583,lng:-81.5333},
+  {t:'F',n:'Beachwood Park',lat:30.3022,lng:-81.5783},
+  {t:'F',n:'Blue Cypress Park',lat:30.2822,lng:-81.6056},
+  {t:'F',n:'Bob Hayes Sports Complex',lat:30.3500,lng:-81.6783},
+  {t:'F',n:'Buck Park',lat:30.3056,lng:-81.6256},
+  {t:'F',n:'Charles Clark Park',lat:30.3333,lng:-81.6189},
+  {t:'F',n:'Davis Park',lat:30.3089,lng:-81.6511},
+  {t:'F',n:'Drew Park',lat:30.3394,lng:-81.6108},
+  {t:'F',n:'Fort Family Regional Park',lat:30.4358,lng:-81.6517},
+  {t:'F',n:'Greenland Park',lat:30.2056,lng:-81.6069},
+  {t:'F',n:'Isles of Palms Park',lat:30.2889,lng:-81.3917},
+  {t:'F',n:'Jacksonville Beach Pier',lat:30.2783,lng:-81.3972},
+  {t:'F',n:'Klutho Park',lat:30.3369,lng:-81.6622},
+  {t:'F',n:'Murray Hill Park',lat:30.3144,lng:-81.6814},
+  {t:'F',n:'Rondette Park',lat:30.3533,lng:-81.6531},
+  {t:'F',n:'Willow Branch Park',lat:30.3097,lng:-81.6822},
+  {t:'F',n:'Fishweir Park',lat:30.3097,lng:-81.6839},
+  {t:'F',n:'R.F. Kennedy Park',lat:30.3006,lng:-81.5811},
+  {t:'F',n:'Ford on Bay',lat:30.3278,lng:-81.6606},
+  {t:'S',n:'Baymeadows Baptist Church',lat:30.2358,lng:-81.5914},
+  {t:'S',n:'Fletcher High School',lat:30.3128,lng:-81.3953},
+  {t:'S',n:'JJVA Volleyball',lat:30.3361,lng:-81.6214},
+  {t:'S',n:'San Jose Elementary',lat:30.2697,lng:-81.5583},
+  {t:'S',n:'Skyline Volleyball',lat:30.3083,lng:-81.6089},
+  {t:'S',n:'Chipshot',lat:30.2739,lng:-81.5328},
+  {t:'S',n:'Pickle Rage',lat:30.3508,lng:-81.5972},
+  {t:'B',n:'V Pizza + Sidecar',lat:30.3069,lng:-81.6483},
+  {t:'B',n:'Dart Bar',lat:30.3114,lng:-81.6697},
+  {t:'B',n:'Paddle Pub at Toon Town',lat:30.3219,lng:-81.6458},
+  {t:'B',n:'MVP Sports Grille',lat:30.2894,lng:-81.5094},
+  {t:'B',n:'Ruby Beach Brewing',lat:30.3267,lng:-81.6533},
+  {t:'B',n:'The Brix Taphouse',lat:30.3167,lng:-81.3981},
+  {t:'B',n:'Tepeyolot Cerveceria',lat:30.3061,lng:-81.6447},
+  {t:'B',n:'The Garage',lat:30.3206,lng:-81.6858},
+  {t:'B',n:'904 Tacos',lat:30.3167,lng:-81.6783},
+  {t:'B',n:'Hoptinger Bier Garden',lat:30.3175,lng:-81.6775},
+  {t:'B',n:'The Mossfire Grill',lat:30.3114,lng:-81.6889},
+];
+
+const _VENUE_COLORS = {F:'#22c55e',S:'#3b82f6',B:'#f59e0b'};
+const _VENUE_TYPE_LABELS = {F:'Athletic Field',S:'School',B:'Bar'};
+const const _venueMarkers = {};
+const _venueLayers = {};
+
+function initVenueOverlay() {
+  if(typeof MAP === 'undefined' || !MAP) { setTimeout(initVenueOverlay, 400); return; }
+  var cityVenues = [
+    {city:'charleston', data:CHARLESTON_VENUES},
+    {city:'phoenix',    data:PHX_VENUES},
+    {city:'jacksonville', data:JAX_VENUES}
+  ];
+  var colors = {F:'#22c55e', S:'#3b82f6', B:'#f59e0b'};
+  var labels = {F:'Athletic Field', S:'School / Private', B:'Bar / Venue'};
+  cityVenues.forEach(function(cv) {
+    ['F','S','B'].forEach(function(t) {
+      var key = cv.city+'_'+t;
+      _venueLayers[key] = L.layerGroup().addTo(MAP);
+      _venueMarkers[key] = [];
+    });
+    cv.data.forEach(function(v) {
+      if(!v.lat || !v.lng) return;
+      var key = cv.city+'_'+v.t;
+      var m = L.circleMarker([v.lat,v.lng],{
+        radius:7, color:'#fff', weight:1.5,
+        fillColor:colors[v.t], fillOpacity:0.85
+      }).bindPopup('<b>'+v.n+'</b><br>'+labels[v.t]);
+      _venueLayers[key].addLayer(m);
+      _venueMarkers[key].push(m);
+    });
+  });
+}
+
+function toggleVenueType(city, typeKey, show) {
+  var key = city+'_'+typeKey;
+  if(!_venueLayers[key]) return;
+  if(show) MAP.addLayer(_venueLayers[key]);
+  else MAP.removeLayer(_venueLayers[key]);
+}
+initVenueOverlay();
+</script>
+</body>
+</html>
