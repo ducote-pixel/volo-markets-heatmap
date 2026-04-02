@@ -168,7 +168,7 @@
 <div id="loading">
   <div class="spinner"></div>
   <p id="load-msg">Connecting to Census Bureau…</p>
-  <small id="load-sub">Loading 16 markets – this takes 20–40 seconds</small>
+  <small id="load-sub">Loading 15 markets – this takes 20–40 seconds</small>
   <div class="prog-wrap"><div id="load-bar"></div></div>
   <span id="load-pct">0%</span>
 </div>
@@ -187,7 +187,7 @@
     <p>Ages 21–35 &nbsp;·&nbsp; Income $75k+ &nbsp;·&nbsp; No-Children HH &nbsp;·&nbsp; ACS 5-Year 2021</p>
   </div>
   <select id="market-select" onchange="flyToMarket(this.value)">
-    <option value="">🗺 All 16 Markets</option>
+    <option value="">🗺 All 15 Markets</option>
   </select>
 </div>
 
@@ -711,20 +711,6 @@ const MARKETS = [
       { name: 'Murray Hill',      lat: 30.3139, lng: -81.6842 },
       { name: 'Springfield',      lat: 30.3414, lng: -81.6497 },
     ]
-  },
-  {
-    id: 'philadelphia', name: 'Philadelphia',
-    center: [39.95, -75.16], zoom: 12,
-    stcofips: ['42101'],
-    neighborhoods: [
-      {name:'Center City', lat:39.9526, lng:-75.1652},
-      {name:'Fishtown', lat:39.9742, lng:-75.1373},
-      {name:'Northern Liberties', lat:39.9640, lng:-75.1405},
-      {name:'South Philly', lat:39.9220, lng:-75.1676},
-      {name:'Manayunk', lat:40.0271, lng:-75.2284},
-      {name:'Old City', lat:39.9490, lng:-75.1454},
-      {name:'Rittenhouse', lat:39.9481, lng:-75.1699}
-    ]
   }
 ];
 
@@ -1152,7 +1138,7 @@ function renderSummary(features, label) {
   const totPop = valid.reduce((s,f) => s + (f.properties.total_pop  || 0), 0);
   const tarPop = valid.reduce((s,f) => s + (f.properties.pop_22_34  || 0), 0);
   document.getElementById('stats-content').innerHTML = `
-    <div class="s-name">${label || 'All 16 Markets'}</div>
+    <div class="s-name">${label || 'All 15 Markets'}</div>
     <div class="s-summary-row"><span>🔥 High Opportunity tracts</span><strong>${high.toLocaleString()}</strong></div>
     <div class="s-summary-row"><span>📈 Moderate-High tracts</span><strong>${modhi.toLocaleString()}</strong></div>
     <div class="s-summary-row"><span>📍 Total tracts analyzed</span><strong>${valid.length.toLocaleString()}</strong></div>
