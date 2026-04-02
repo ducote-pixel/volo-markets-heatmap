@@ -168,7 +168,7 @@
 <div id="loading">
   <div class="spinner"></div>
   <p id="load-msg">Connecting to Census Bureau…</p>
-  <small id="load-sub">Loading 15 markets – this takes 20–40 seconds</small>
+  <small id="load-sub">Loading 16 markets – this takes 20–40 seconds</small>
   <div class="prog-wrap"><div id="load-bar"></div></div>
   <span id="load-pct">0%</span>
 </div>
@@ -187,7 +187,7 @@
     <p>Ages 21–35 &nbsp;·&nbsp; Income $75k+ &nbsp;·&nbsp; No-Children HH &nbsp;·&nbsp; ACS 5-Year 2021</p>
   </div>
   <select id="market-select" onchange="flyToMarket(this.value)">
-    <option value="">🗺 All 15 Markets</option>
+    <option value="">🗺 All 16 Markets</option>
   </select>
 </div>
 
@@ -231,6 +231,10 @@
   <label class="vtoggle"><input type="checkbox" id="tog-jax-F" checked onchange="toggleVenueType('jacksonville','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(20)</small></label>
   <label class="vtoggle"><input type="checkbox" id="tog-jax-S" checked onchange="toggleVenueType('jacksonville','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(7)</small></label>
   <label class="vtoggle"><input type="checkbox" id="tog-jax-B" checked onchange="toggleVenueType('jacksonville','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(11)</small></label>
+    <div class="vcity">Philadelphia</div>
+    <label class="vtoggle"><input type="checkbox" id="tog-phl-F" checked onchange="toggleVenueType('philadelphia','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(9)</small></label>
+    <label class="vtoggle"><input type="checkbox" id="tog-phl-S" checked onchange="toggleVenueType('philadelphia','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(2)</small></label>
+    <label class="vtoggle"><input type="checkbox" id="tog-phl-B" checked onchange="toggleVenueType('philadelphia','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(15)</small></label>
 </div>
 
 </div>
@@ -707,6 +711,20 @@ const MARKETS = [
       { name: 'Murray Hill',      lat: 30.3139, lng: -81.6842 },
       { name: 'Springfield',      lat: 30.3414, lng: -81.6497 },
     ]
+  },
+  {
+    id: 'philadelphia', name: 'Philadelphia',
+    center: [39.95, -75.16], zoom: 12,
+    stcofips: ['42101'],
+    neighborhoods: [
+      {name:'Center City', lat:39.9526, lng:-75.1652},
+      {name:'Fishtown', lat:39.9742, lng:-75.1373},
+      {name:'Northern Liberties', lat:39.9640, lng:-75.1405},
+      {name:'South Philly', lat:39.9220, lng:-75.1676},
+      {name:'Manayunk', lat:40.0271, lng:-75.2284},
+      {name:'Old City', lat:39.9490, lng:-75.1454},
+      {name:'Rittenhouse', lat:39.9481, lng:-75.1699}
+    ]
   }
 ];
 
@@ -1134,7 +1152,7 @@ function renderSummary(features, label) {
   const totPop = valid.reduce((s,f) => s + (f.properties.total_pop  || 0), 0);
   const tarPop = valid.reduce((s,f) => s + (f.properties.pop_22_34  || 0), 0);
   document.getElementById('stats-content').innerHTML = `
-    <div class="s-name">${label || 'All 15 Markets'}</div>
+    <div class="s-name">${label || 'All 16 Markets'}</div>
     <div class="s-summary-row"><span>🔥 High Opportunity tracts</span><strong>${high.toLocaleString()}</strong></div>
     <div class="s-summary-row"><span>📈 Moderate-High tracts</span><strong>${modhi.toLocaleString()}</strong></div>
     <div class="s-summary-row"><span>📍 Total tracts analyzed</span><strong>${valid.length.toLocaleString()}</strong></div>
@@ -1395,6 +1413,34 @@ const JAX_VENUES = [
   {t:'B',n:'The Mossfire Grill',lat:30.3114,lng:-81.6889},
 ];
 
+const PHILLY_VENUES = [
+  {t:'B',n:'Top Tomato Bar & Pizza',lat:39.951,lng:-75.1595},
+  {t:'B',n:'F1 Arcade',lat:39.9519,lng:-75.168},
+  {t:'B',n:'Yards Brewing Co.',lat:39.9604,lng:-75.1426},
+  {t:'B',n:'Garage Fishtown',lat:39.9738,lng:-75.1375},
+  {t:'B',n:'Frankford Hall',lat:39.9748,lng:-75.1367},
+  {t:'B',n:'Libertee Grounds',lat:39.9729,lng:-75.1709},
+  {t:'B',n:'Bayou Bar & Grill',lat:40.0276,lng:-75.2293},
+  {t:'B',n:'Cactus Cantina',lat:40.027,lng:-75.2296},
+  {t:'B',n:'Craft Hall',lat:39.9621,lng:-75.136},
+  {t:'B',n:'Old City Beer Garden',lat:39.9492,lng:-75.1443},
+  {t:'B',n:'Buffalo Billiards',lat:39.95,lng:-75.1453},
+  {t:'B',n:'Garage Rittenhouse',lat:39.9479,lng:-75.1668},
+  {t:'B',n:'Barstool',lat:39.9489,lng:-75.1742},
+  {t:'B',n:'Garage Passyunk',lat:39.9329,lng:-75.1567},
+  {t:'B',n:'Uptown Beer Garden',lat:39.9812,lng:-75.1535},
+  {t:'F',n:'AFC Fitness',lat:40.0271,lng:-75.2286},
+  {t:'F',n:'Starfinder Foundation',lat:40.0268,lng:-75.2293},
+  {t:'F',n:'Elite Sports Factory',lat:40.0264,lng:-75.2278},
+  {t:'F',n:'Kendrick Rec Center',lat:40.0382,lng:-75.2358},
+  {t:'F',n:'Hillside Rec Center',lat:40.0298,lng:-75.2316},
+  {t:'F',n:'Portres Sports Club',lat:39.9659,lng:-75.1338},
+  {t:'F',n:'VIVA Padel & Pickleball',lat:39.9695,lng:-75.1589},
+  {t:'F',n:'Phield House',lat:39.9681,lng:-75.1577},
+  {t:'F',n:'Palumbo Rec Center',lat:39.9313,lng:-75.1618},
+  {t:'S',n:'Penn Treaty High School',lat:39.9706,lng:-75.1392},
+  {t:'S',n:'Adaire Elementary School',lat:39.9741,lng:-75.1349}
+];
 const _venueMarkers = {};
 const _venueLayers = {};
 
@@ -1408,7 +1454,8 @@ function initVenueOverlay() {
   var cityVenues = [
     {city:'charleston', data:CHARLESTON_VENUES},
     {city:'phoenix',    data:PHX_VENUES},
-    {city:'jacksonville', data:JAX_VENUES}
+    {city:'jacksonville', data:JAX_VENUES},
+      {city:'philadelphia', data:PHILLY_VENUES}
   ];
   var colors = {F:'#22c55e', S:'#3b82f6', B:'#f59e0b'};
   var labels = {F:'Athletic Field', S:'School / Private', B:'Bar / Venue'};
