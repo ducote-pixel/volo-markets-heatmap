@@ -276,9 +276,9 @@
     <label class="vtoggle"><input type="checkbox" id="tog-sjo-S" checked onchange="toggleVenueType('san-jose','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(2)</small></label>
     <label class="vtoggle"><input type="checkbox" id="tog-sjo-B" checked onchange="toggleVenueType('san-jose','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(6)</small></label>
     <div class="vcity">Washington DC</div>
-    <label class="vtoggle"><input type="checkbox" id="tog-wdc-F" checked onchange="toggleVenueType('washington-dc','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(9)</small></label>
-    <label class="vtoggle"><input type="checkbox" id="tog-wdc-S" checked onchange="toggleVenueType('washington-dc','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(2)</small></label>
-    <label class="vtoggle"><input type="checkbox" id="tog-wdc-B" checked onchange="toggleVenueType('washington-dc','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(9)</small></label>
+    <label class="vtoggle"><input type="checkbox" id="tog-wdc-F" checked onchange="toggleVenueType('washington-dc','F',this.checked)"><span class="vdot" style="background:#22c55e"></span>Fields <small>(11)</small></label>
+    <label class="vtoggle"><input type="checkbox" id="tog-wdc-S" checked onchange="toggleVenueType('washington-dc','S',this.checked)"><span class="vdot" style="background:#3b82f6"></span>Schools <small>(4)</small></label>
+    <label class="vtoggle"><input type="checkbox" id="tog-wdc-B" checked onchange="toggleVenueType('washington-dc','B',this.checked)"><span class="vdot" style="background:#f59e0b"></span>Bars <small>(11)</small></label>
 </div>
 
 </div>
@@ -699,7 +699,7 @@ const MARKETS = [
   {
     id: 'washington-dc', name: 'Washington DC',
     center: [38.90, -77.03], zoom: 12,
-    stcofips: ['11001','51013','51510'],
+    stcofips: ['11001','51013','51510','24031','24033'],
     neighborhoods: [
       { name: 'Georgetown',       lat: 38.9076, lng: -77.0723 },
       { name: 'Dupont Circle',    lat: 38.9096, lng: -77.0434 },
@@ -719,6 +719,7 @@ const MARKETS = [
       { name: 'Alexandria',       lat: 38.8048, lng: -77.0469 },
       { name: 'Bethesda',         lat: 38.9840, lng: -77.0947 },
       { name: 'Silver Spring',    lat: 38.9912, lng: -77.0261 },
+      { name: 'College Park',    lat: 38.9807, lng: -76.9369 },
     ]
   },
 
@@ -1813,6 +1814,13 @@ const DC_VENUES = [
   {t:'F',n:"Fletchers Cove",lat:38.9126,lng:-77.1089},
   {t:'S',n:"Woodrow Wilson High School",lat:38.9462,lng:-77.0789},
   {t:'S',n:"Dunbar High School DC",lat:38.9123,lng:-77.0184}
+,
+  {t:'S',n:'Bethesda Elementary',lat:38.9878,lng:-77.097},
+  {t:'S',n:'Georgetown Prep',lat:39.0434,lng:-77.1176},
+  {t:'B',n:'Bethesda Lucky',lat:38.9843,lng:-77.0946},
+  {t:'F',n:'Glassbox Padel',lat:38.9840,lng:-77.0945},
+  {t:'B',n:'Strike',lat:38.9091,lng:-77.0434},
+  {t:'F',n:'JTCC',lat:38.9979,lng:-76.939}
 ];
 const _venueMarkers = {};
 const _venueLayers = {};
